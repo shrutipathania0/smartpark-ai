@@ -2,16 +2,22 @@ import streamlit as st
 import json
 import config
 from modules import parking_assistant
+from assets import ui_theme
 
 st.set_page_config(page_title="AI Assistant — SmartPark AI", page_icon="🤖", layout="wide")
 
-st.markdown("## 🤖 SmartPark Conversational Assistant")
-st.caption("Ask questions, search for optimal parking spaces, and manage reservations using natural language.")
+ui_theme.inject_custom_theme()
 
-# User profile / name input
+st.markdown("""
+<div class="smart-banner" style="padding: 20px 28px;">
+    <h1>🤖 SmartPark Conversational Assistant</h1>
+    <p>Ask questions, search for optimal parking spaces, and manage reservations using natural language.</p>
+</div>
+""", unsafe_allow_html=True)
+
 user_name = st.sidebar.text_input("Your Name", value="Shruti", help="Used when making automated reservations.")
 
-st.sidebar.markdown("### 💡 Quick Sample Prompts")
+st.sidebar.markdown("### 💡 Quick Prompts")
 sample_prompts = [
     "Find parking near the entrance for an SUV under ₹60 per hour",
     "Show available EV charging spaces",
@@ -26,7 +32,6 @@ for sp in sample_prompts:
     if st.sidebar.button(sp, key=f"btn_{hash(sp)}"):
         st.session_state["assistant_prompt_input"] = sp
 
-# Chat History Session Initialization
 if "chat_messages" not in st.session_state:
     st.session_state["chat_messages"] = [
         {
@@ -36,7 +41,6 @@ if "chat_messages" not in st.session_state:
         }
     ]
 
-# Display Chat Trajectory
 for msg in st.session_state["chat_messages"]:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
@@ -44,7 +48,6 @@ for msg in st.session_state["chat_messages"]:
             with st.expander("🔍 View Extracted Intent & Structured JSON Data"):
                 st.json(msg["structured"])
 
-# Chat Input Box
 default_prompt = st.session_state.pop("assistant_prompt_input", None)
 prompt = st.chat_input("Ask SmartPark AI (e.g. 'Find an SUV spot near entrance under ₹50')...")
 
@@ -52,12 +55,10 @@ if default_prompt:
     prompt = default_prompt
 
 if prompt:
-    # Append User Message
     st.session_state["chat_messages"].append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
         
-    # Process Assistant Response
     with st.chat_message("assistant"):
         with st.spinner("Processing intent and querying live parking database..."):
             response = parking_assistant.process_chat_message(prompt, user_name=user_name)
@@ -70,7 +71,6 @@ if prompt:
         if response.get("llm_used"):
             st.caption("✨ Response polished using Groq LLM (Llama 3.3 70B)")
             
-    # Save Assistant Response
     st.session_state["chat_messages"].append({
         "role": "assistant",
         "content": response["text_content"],

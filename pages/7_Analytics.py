@@ -2,19 +2,24 @@ import streamlit as st
 import config
 from database import db_manager
 from modules import analytics_engine, reservation_manager
+from assets import ui_theme
 
 st.set_page_config(page_title="Analytics — SmartPark AI", page_icon="📈", layout="wide")
 
-st.markdown("## 📈 Parking Analytics & Business Intelligence")
-st.caption("Real-time occupancy visualizations, historical trend lines, zone performance, and revenue analytics.")
+ui_theme.inject_custom_theme()
 
-# Fetch Live Data
+st.markdown("""
+<div class="smart-banner" style="padding: 20px 28px;">
+    <h1>📈 Parking Analytics & Business Intelligence</h1>
+    <p>Real-time occupancy visualizations, historical trend lines, zone performance, and revenue analytics.</p>
+</div>
+""", unsafe_allow_html=True)
+
 slots = db_manager.get_all_slots()
 history_snapshots = db_manager.get_analytics_history(limit=100)
 reservations = db_manager.get_reservations()
 res_summary = reservation_manager.get_reservation_summary()
 
-# Top KPI Summary Cards
 k1, k2, k3, k4 = st.columns(4)
 k1.metric("Total Reservations", res_summary["total_reservations"])
 k2.metric("Active Reservations", res_summary["active_reservations"])
@@ -23,7 +28,6 @@ k4.metric("Avg Booking Duration", f"{res_summary['avg_duration_mins']} mins")
 
 st.divider()
 
-# Interactive Chart Grid
 st.markdown("### 📊 Real-Time Space Distribution")
 
 c_pie, c_zone = st.columns(2)

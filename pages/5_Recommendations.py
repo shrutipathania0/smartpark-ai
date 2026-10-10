@@ -2,13 +2,19 @@ import streamlit as st
 import config
 from database import db_manager
 from modules import recommendation_engine
+from assets import ui_theme
 
 st.set_page_config(page_title="Recommendations — SmartPark AI", page_icon="🎯", layout="wide")
 
-st.markdown("## 🎯 Intelligent Parking Slot Recommendation Engine")
-st.caption("Custom multi-criteria ranking algorithm prioritizing proximity, price budget, vehicle size, and special requirements.")
+ui_theme.inject_custom_theme()
 
-# Filter Controls Section
+st.markdown("""
+<div class="smart-banner" style="padding: 20px 28px;">
+    <h1>🎯 Intelligent Parking Recommendation Engine</h1>
+    <p>Custom multi-criteria ranking algorithm prioritizing proximity, price budget, vehicle size, and special requirements.</p>
+</div>
+""", unsafe_allow_html=True)
+
 col_f1, col_f2, col_f3 = st.columns(3)
 
 with col_f1:
@@ -18,17 +24,16 @@ with col_f1:
 with col_f2:
     max_price = st.slider("Max Hourly Price (₹/hr)", 20, 100, 60, step=5)
     needs_ev = st.checkbox("⚡ Requires EV Fast Charger")
-    needs_acc = st.checkbox("♿ Requires Accessible (Handicapped) Space")
+    needs_acc = st.checkbox("♿ Requires Accessible Space")
 
 with col_f3:
-    st.markdown("##### ⚖️ Algorithm Scoring Weights")
+    st.markdown("##### ⚖️ Scoring Weights")
     w_prox = st.slider("Proximity Weight", 0.0, 1.0, 0.4, step=0.1)
     w_price = st.slider("Price Weight", 0.0, 1.0, 0.3, step=0.1)
-    w_pref = st.slider("Preference Match Weight", 0.0, 1.0, 0.3, step=0.1)
+    w_pref = st.slider("Preference Weight", 0.0, 1.0, 0.3, step=0.1)
 
 st.divider()
 
-# Execute Recommendation Algorithm
 slots = db_manager.get_all_slots()
 ranked_slots = recommendation_engine.rank_parking_slots(
     slots=slots,
@@ -47,7 +52,6 @@ st.markdown(f"### 📋 Ranked Search Results ({len(ranked_slots)} Matching Avail
 if not ranked_slots:
     st.warning("❌ No available parking spaces match your exact criteria. Try adjusting your max price limit or vehicle requirement.")
 else:
-    # Display Top Pick Highlight Card
     top = ranked_slots[0]
     st.markdown(f"""
     <div style="background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%); border: 2px solid #00B4D8; border-radius: 16px; padding: 24px; margin-bottom: 24px;">
@@ -65,7 +69,6 @@ else:
     </div>
     """, unsafe_allow_html=True)
     
-    # Direct Reserve Button for Top Recommendation
     res_col1, res_col2 = st.columns([1, 3])
     with res_col1:
         if st.button(f"📝 Quick Reserve Slot {top['slot_id']}", use_container_width=True):
@@ -78,7 +81,6 @@ else:
 
     st.divider()
 
-    # Display List of All Ranked Candidate Slots
     st.markdown("#### 🔢 Complete Candidate Ranking Table")
     display_rows = []
     for rank_idx, cand in enumerate(ranked_slots, start=1):

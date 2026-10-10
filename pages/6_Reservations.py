@@ -2,21 +2,26 @@ import streamlit as st
 import config
 from database import db_manager
 from modules import reservation_manager
+from assets import ui_theme
 
 st.set_page_config(page_title="Reservations — SmartPark AI", page_icon="📝", layout="wide")
 
-st.markdown("## 📝 Parking Slot Reservation Management")
-st.caption("Book slots in advance, manage active holds, calculate pricing, and cancel reservations.")
+ui_theme.inject_custom_theme()
 
-# Ephemeral Storage Disclaimer Note
-st.info("ℹ️ **Storage Note:** Database records are persisted in local SQLite storage. On ephemeral cloud hosting (Streamlit Cloud), app restarts may reset unbacked DB files. Production builds can easily link an external Postgres/MySQL URI.")
+st.markdown("""
+<div class="smart-banner" style="padding: 20px 28px;">
+    <h1>📝 Parking Slot Reservation Management</h1>
+    <p>Book slots in advance, manage active holds, calculate pricing, and cancel reservations.</p>
+</div>
+""", unsafe_allow_html=True)
+
+st.info("ℹ️ **Storage Note:** Database records are persisted in local SQLite storage. On ephemeral cloud hosting (Streamlit Cloud), app restarts may reset unbacked DB files.")
 
 tab_book, tab_history, tab_cancel = st.tabs(["➕ New Reservation", "📋 Reservation History", "❌ Cancel Reservation"])
 
 with tab_book:
     st.markdown("### Create New Slot Reservation")
     
-    # Fetch available slots
     slots = db_manager.get_all_slots()
     avail_slots = [s for s in slots if s["status"] == "available"]
     
@@ -36,7 +41,6 @@ with tab_book:
             veh_num = st.text_input("Vehicle License Plate", value="MH-01-AB-1234")
             duration_mins = st.slider("Reservation Duration (Minutes)", 15, 480, 60, step=15)
             
-            # Calculate estimated price
             chosen_slot_obj = next(s for s in avail_slots if s["slot_id"] == chosen_slot_id)
             est_price = (duration_mins / 60.0) * chosen_slot_obj["hourly_price"]
             st.markdown(f"#### Estimated Price: `<span style='color:#00E676;'>₹{est_price:.2f}</span>`", unsafe_allow_html=True)

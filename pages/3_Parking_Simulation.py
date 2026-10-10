@@ -3,20 +3,25 @@ import time
 import config
 from database import db_manager
 from modules.simulation_engine import ParkingSimulation
+from assets import ui_theme
 
 st.set_page_config(page_title="Simulation — SmartPark AI", page_icon="🎮", layout="wide")
 
-st.markdown("## 🎮 Interactive Parking & Traffic Simulator")
-st.caption("Simulate real-time vehicle arrivals, departures, entrance queuing, and revenue generation.")
+ui_theme.inject_custom_theme()
 
-# Initialize Simulation in Session State
+st.markdown("""
+<div class="smart-banner" style="padding: 20px 28px;">
+    <h1>🎮 Interactive Parking & Traffic Simulator</h1>
+    <p>Simulate real-time vehicle arrivals, departures, entrance queuing, and revenue generation.</p>
+</div>
+""", unsafe_allow_html=True)
+
 if "sim" not in st.session_state:
     st.session_state["sim"] = ParkingSimulation()
 
 sim: ParkingSimulation = st.session_state["sim"]
 
-# Top Controls Bar
-st.markdown("### 🎛️ Simulation Controls")
+st.markdown("### 🎛️ Traffic Control Console")
 
 ctrl_c1, ctrl_c2, ctrl_c3, ctrl_c4, ctrl_c5 = st.columns(5)
 
@@ -47,7 +52,6 @@ with ctrl_c5:
         st.session_state["sim_last_events"] = ["Simulation reset to initial state."]
         st.rerun()
 
-# Simulation Parameters
 st.sidebar.markdown("### ⚙️ Traffic Parameters")
 arrival_rate = st.sidebar.slider("Arrival Rate Intensity", 1, 10, 3)
 dept_rate = st.sidebar.slider("Departure Probability", 1, 10, 2)
@@ -62,7 +66,6 @@ if st.sidebar.button("⏩ Run Auto 5 Steps"):
 
 st.divider()
 
-# Live Simulation Metrics Summary
 summary = sim.get_summary()
 
 m1, m2, m3, m4, m5, m6 = st.columns(6)
@@ -70,15 +73,13 @@ m1.metric("Total Slots", summary["total_slots"])
 m2.metric("🟢 Free", summary["available_count"])
 m3.metric("🔴 Occupied", summary["occupied_count"])
 m4.metric("🟡 Reserved", summary["reserved_count"])
-m5.metric("⏳ Queue Length", summary["queue_length"], delta=f"{summary['queue_length']} waiting")
+m5.metric("⏳ Queue Length", summary["queue_length"])
 m6.metric("💰 Sim Revenue", f"₹{summary['sim_revenue']:.2f}")
 
 st.divider()
 
-# Visual Map Layout of 24 Slots
 st.markdown("### 🚥 Live Interactive Parking Grid")
 
-# Group slots by zone
 zones = ["Zone A", "Zone B", "Zone C", "Zone D"]
 for z in zones:
     st.markdown(f"#### {z}")
@@ -88,7 +89,6 @@ for z in zones:
     for idx, s in enumerate(z_slots):
         s_id = s["slot_id"]
         status = s["status"]
-        
         btn_color = "🟢" if status == "available" else ("🔴" if status == "occupied" else "🟡")
         
         with cols[idx % 6]:
@@ -105,7 +105,6 @@ for z in zones:
 
 st.divider()
 
-# Simulation Event Logs
 st.markdown("### 📜 Simulation Event Stream")
 last_events = st.session_state.get("sim_last_events", ["Simulation ready."])
 for e in last_events:
