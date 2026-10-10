@@ -1,0 +1,28 @@
+# Python
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+
+# Databases & local state
+*.db
+*.sqlite
+*.sqlite3
+smartpark.db
+
+# Secrets & Environment
+.env
+.streamlit/secrets.toml
+
+# System & OS
+.DS_Store
+Thumbs.db
+
+# Model weights & ultralytics outputs
+runs/
+*.pt
+*.onnx
+*.weights
