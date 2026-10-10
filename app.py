@@ -1,260 +1,146 @@
 import streamlit as st
-import os
-import pathlib
 import config
 from database import db_manager
+from assets import ui_theme
 
 # Configure Streamlit Page
 st.set_page_config(
-    page_title=f"{config.APP_NAME} — Parking Intelligence",
+    page_title=f"{config.APP_NAME} — Next-Gen Mobility",
     page_icon="🚗",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Custom Styling (Dark Navy Theme, Glassmorphism, Metric Cards)
-CUSTOM_CSS = """
-<style>
-    /* Dark Navy Base Theme */
-    .stApp {
-        background-color: #0B132B;
-        color: #F8FAFC;
-        font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    }
-    
-    /* Sidebar Styling */
-    section[data-testid="stSidebar"] {
-        background-color: #1C2541 !important;
-        border-right: 1px solid #1E293B;
-    }
-    
-    /* Header Banner */
-    .main-header {
-        background: linear-gradient(135deg, #1C2541 0%, #00B4D8 100%);
-        padding: 24px 32px;
-        border-radius: 16px;
-        margin-bottom: 24px;
-        box-shadow: 0 10px 25px -5px rgba(0, 180, 216, 0.25);
-    }
-    .main-header h1 {
-        color: #FFFFFF;
-        font-size: 2.2rem;
-        font-weight: 700;
-        margin: 0;
-    }
-    .main-header p {
-        color: #E2E8F0;
-        font-size: 1.05rem;
-        margin-top: 6px;
-        margin-bottom: 0;
-    }
-    
-    /* Glassmorphism Metric Cards */
-    .metric-card {
-        background: #1E293B;
-        border: 1px solid #334155;
-        border-radius: 12px;
-        padding: 20px;
-        text-align: center;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    .metric-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.4);
-        border-color: #00B4D8;
-    }
-    .metric-val {
-        font-size: 2.2rem;
-        font-weight: 800;
-        margin: 8px 0;
-    }
-    .metric-lbl {
-        color: #94A3B8;
-        font-size: 0.88rem;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        font-weight: 600;
-    }
-    
-    /* Status Badges */
-    .badge-available {
-        background-color: rgba(0, 230, 118, 0.15);
-        color: #00E676;
-        border: 1px solid #00E676;
-        padding: 4px 12px;
-        border-radius: 20px;
-        font-weight: 600;
-        font-size: 0.85rem;
-    }
-    .badge-occupied {
-        background-color: rgba(255, 82, 82, 0.15);
-        color: #FF5252;
-        border: 1px solid #FF5252;
-        padding: 4px 12px;
-        border-radius: 20px;
-        font-weight: 600;
-        font-size: 0.85rem;
-    }
-    .badge-reserved {
-        background-color: rgba(255, 214, 0, 0.15);
-        color: #FFD600;
-        border: 1px solid #FFD600;
-        padding: 4px 12px;
-        border-radius: 20px;
-        font-weight: 600;
-        font-size: 0.85rem;
-    }
-    
-    /* Custom Buttons */
-    div.stButton > button:first-child {
-        background: linear-gradient(135deg, #00B4D8 0%, #0077B6 100%);
-        color: white;
-        border: none;
-        border-radius: 8px;
-        padding: 10px 24px;
-        font-weight: 600;
-        transition: all 0.2s ease;
-    }
-    div.stButton > button:first-child:hover {
-        background: linear-gradient(135deg, #48CAE4 0%, #00B4D8 100%);
-        box-shadow: 0 4px 12px rgba(0, 180, 216, 0.4);
-    }
-    
-    /* Hide default Streamlit menu & footer padding */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-</style>
-"""
+# Inject Custom Google Fonts & Glassmorphic CSS Theme
+ui_theme.inject_custom_theme()
 
-st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
-
-# Ensure Database & Initial Data exist
+# Ensure Database & Schema initialized
 db_manager.init_db()
 db_manager.auto_expire_reservations()
 
-# Sidebar Navigation Header
-st.sidebar.markdown(f"### 🚗 {config.APP_NAME}")
+# Sidebar Brand Header
+st.sidebar.markdown(f"## 🚗 {config.APP_NAME}")
 st.sidebar.caption(config.APP_TAGLINE)
 st.sidebar.divider()
 
-# Sidebar System Health Status
+# Live Quick Metrics in Sidebar
 slots_summary = db_manager.get_all_slots()
 total_slots = len(slots_summary)
 avail_slots = len([s for s in slots_summary if s["status"] == "available"])
 occ_slots = len([s for s in slots_summary if s["status"] == "occupied"])
 res_slots = len([s for s in slots_summary if s["status"] == "reserved"])
 
-st.sidebar.markdown("#### ⚡ Live Status")
-col_s1, col_s2 = st.sidebar.columns(2)
-col_s1.metric("Available", avail_slots)
-col_s2.metric("Occupied", occ_slots + res_slots)
+st.sidebar.markdown("### ⚡ System Status")
+sb_col1, sb_col2 = st.sidebar.columns(2)
+sb_col1.metric("🟢 Free", avail_slots)
+sb_col2.metric("🚘 Busy", occ_slots + res_slots)
 
 st.sidebar.divider()
 
-# Groq API Status check
 groq_key = config.get_groq_api_key()
 if groq_key:
     st.sidebar.success("🟢 Groq LLM Connected", icon="🤖")
 else:
-    st.sidebar.info("ℹ️ Offline NLP Baseline Mode (No Groq Key)", icon="🧠")
+    st.sidebar.info("🧠 Offline Rule-Based NLP Mode", icon="ℹ️")
 
 st.sidebar.caption(f"SmartPark AI v{config.VERSION} | SQLite Engine")
 
-# Welcome Header on App Entry
+# App Main Banner Header
 st.markdown("""
-<div class="main-header">
+<div class="smart-banner">
     <h1>🚗 SmartPark AI</h1>
-    <p>Intelligent Parking Management, Vision Occupancy Detection & Conversational Assistant</p>
+    <p>Next-Generation Parking Intelligence, Vision Occupancy Detection & Conversational Assistant</p>
 </div>
 """, unsafe_allow_html=True)
 
-# Quick Launch Cards if land on main app.py
-st.markdown("### 🌟 Explore Application Modules")
+# Main Navigation Quick Launch Deck
+st.markdown("### 🌟 Feature Modules Quick Access")
+
+c_nav1, c_nav2, c_nav3, c_nav4 = st.columns(4)
+
+with c_nav1:
+    st.markdown("""
+    <div class="glass-card" style="text-align:center;">
+        <div style="font-size:2.8rem; margin-bottom:8px;">📷</div>
+        <h4 style="color:#00B4D8; margin:0 0 6px 0;">Vision Detector</h4>
+        <p style="color:#94A3B8; font-size:0.85rem; margin-bottom:12px;">YOLOv8 Camera & Upload Occupancy Analysis</p>
+    </div>
+    """, unsafe_allow_html=True)
+    if st.button("Open Detection", key="btn_nav_det", use_container_width=True):
+        st.switch_page("pages/2_Parking_Detection.py")
+
+with c_nav2:
+    st.markdown("""
+    <div class="glass-card" style="text-align:center;">
+        <div style="font-size:2.8rem; margin-bottom:8px;">🎮</div>
+        <h4 style="color:#00E676; margin:0 0 6px 0;">Traffic Simulator</h4>
+        <p style="color:#94A3B8; font-size:0.85rem; margin-bottom:12px;">Interactive Arrival Queues & Real-time Parking Flows</p>
+    </div>
+    """, unsafe_allow_html=True)
+    if st.button("Open Simulator", key="btn_nav_sim", use_container_width=True):
+        st.switch_page("pages/3_Parking_Simulation.py")
+
+with c_nav3:
+    st.markdown("""
+    <div class="glass-card" style="text-align:center;">
+        <div style="font-size:2.8rem; margin-bottom:8px;">🤖</div>
+        <h4 style="color:#FFD600; margin:0 0 6px 0;">AI Assistant</h4>
+        <p style="color:#94A3B8; font-size:0.85rem; margin-bottom:12px;">Conversational Bot for Search, Help & Reservations</p>
+    </div>
+    """, unsafe_allow_html=True)
+    if st.button("Open AI Bot", key="btn_nav_ai", use_container_width=True):
+        st.switch_page("pages/4_AI_Assistant.py")
+
+with c_nav4:
+    st.markdown("""
+    <div class="glass-card" style="text-align:center;">
+        <div style="font-size:2.8rem; margin-bottom:8px;">🎯</div>
+        <h4 style="color:#48CAE4; margin:0 0 6px 0;">Recommendations</h4>
+        <p style="color:#94A3B8; font-size:0.85rem; margin-bottom:12px;">Smart Proximity & Budget Slot Ranking Engine</p>
+    </div>
+    """, unsafe_allow_html=True)
+    if st.button("Open Recommendations", key="btn_nav_rec", use_container_width=True):
+        st.switch_page("pages/5_Recommendations.py")
+
+st.divider()
+
+# Live System Dashboard Highlights
+st.markdown("### 📊 Facility Snapshot")
 
 m_col1, m_col2, m_col3, m_col4 = st.columns(4)
 
 with m_col1:
-    st.markdown("""
-    <div class="metric-card">
-        <div style="font-size: 2.5rem;">📷</div>
-        <div class="metric-val" style="color:#00B4D8;">Vision</div>
-        <div class="metric-lbl">Camera & Image Detection</div>
+    st.markdown(f"""
+    <div class="glass-card">
+        <div style="color:#94A3B8; font-size:0.85rem; font-weight:700; text-transform:uppercase;">Total Capacity</div>
+        <div style="font-size:2.5rem; font-weight:800; color:#FFFFFF; margin:6px 0;">{total_slots} Bays</div>
+        <div style="color:#00B4D8; font-size:0.85rem;">4 Zones (A, B, C, D)</div>
     </div>
     """, unsafe_allow_html=True)
-    if st.button("Open Detection", key="nav_det"):
-        st.switch_page("pages/2_Parking_Detection.py")
 
 with m_col2:
-    st.markdown("""
-    <div class="metric-card">
-        <div style="font-size: 2.5rem;">🎮</div>
-        <div class="metric-val" style="color:#00E676;">Simulator</div>
-        <div class="metric-lbl">Traffic & Slot Controls</div>
+    st.markdown(f"""
+    <div class="glass-card">
+        <div style="color:#94A3B8; font-size:0.85rem; font-weight:700; text-transform:uppercase;">Vacant Spaces</div>
+        <div style="font-size:2.5rem; font-weight:800; color:#00E676; margin:6px 0;">{avail_slots} Free</div>
+        <div style="color:#00E676; font-size:0.85rem;">{(avail_slots/total_slots*100):.1f}% Available</div>
     </div>
     """, unsafe_allow_html=True)
-    if st.button("Open Simulator", key="nav_sim"):
-        st.switch_page("pages/3_Parking_Simulation.py")
 
 with m_col3:
-    st.markdown("""
-    <div class="metric-card">
-        <div style="font-size: 2.5rem;">🤖</div>
-        <div class="metric-val" style="color:#FFD600;">AI Assistant</div>
-        <div class="metric-lbl">Conversational Bot</div>
+    st.markdown(f"""
+    <div class="glass-card">
+        <div style="color:#94A3B8; font-size:0.85rem; font-weight:700; text-transform:uppercase;">Occupied Spaces</div>
+        <div style="font-size:2.5rem; font-weight:800; color:#FF5252; margin:6px 0;">{occ_slots} Parked</div>
+        <div style="color:#FF5252; font-size:0.85rem;">{(occ_slots/total_slots*100):.1f}% Utilized</div>
     </div>
     """, unsafe_allow_html=True)
-    if st.button("Open Assistant", key="nav_ai"):
-        st.switch_page("pages/4_AI_Assistant.py")
 
 with m_col4:
-    st.markdown("""
-    <div class="metric-card">
-        <div style="font-size: 2.5rem;">📊</div>
-        <div class="metric-val" style="color:#FF5252;">Analytics</div>
-        <div class="metric-lbl">Charts & Revenue Logs</div>
-    </div>
-    """, unsafe_allow_html=True)
-    if st.button("Open Analytics", key="nav_ana"):
-        st.switch_page("pages/7_Analytics.py")
-
-st.divider()
-
-# Quick Overview Dashboard Metrics
-st.markdown("### 📊 System Quick Snapshot")
-c1, c2, c3, c4 = st.columns(4)
-
-with c1:
     st.markdown(f"""
-    <div class="metric-card">
-        <div class="metric-lbl">Total Capacity</div>
-        <div class="metric-val" style="color:#F8FAFC;">{total_slots}</div>
-        <div style="color:#94A3B8; font-size:0.8rem;">4 Zones (A, B, C, D)</div>
-    </div>
-    """, unsafe_allow_html=True)
-
-with c2:
-    st.markdown(f"""
-    <div class="metric-card">
-        <div class="metric-lbl">Vacant Spaces</div>
-        <div class="metric-val" style="color:#00E676;">{avail_slots}</div>
-        <div style="color:#00E676; font-size:0.8rem;">{(avail_slots/total_slots*100):.1f}% Available</div>
-    </div>
-    """, unsafe_allow_html=True)
-
-with c3:
-    st.markdown(f"""
-    <div class="metric-card">
-        <div class="metric-lbl">Occupied Spaces</div>
-        <div class="metric-val" style="color:#FF5252;">{occ_slots}</div>
-        <div style="color:#FF5252; font-size:0.8rem;">{(occ_slots/total_slots*100):.1f}% Parked</div>
-    </div>
-    """, unsafe_allow_html=True)
-
-with c4:
-    st.markdown(f"""
-    <div class="metric-card">
-        <div class="metric-lbl">Active Reservations</div>
-        <div class="metric-val" style="color:#FFD600;">{res_slots}</div>
-        <div style="color:#FFD600; font-size:0.8rem;">Held via SmartPark</div>
+    <div class="glass-card">
+        <div style="color:#94A3B8; font-size:0.85rem; font-weight:700; text-transform:uppercase;">Active Holds</div>
+        <div style="font-size:2.5rem; font-weight:800; color:#FFD600; margin:6px 0;">{res_slots} Reserved</div>
+        <div style="color:#FFD600; font-size:0.85rem;">SmartPark Advance Booking</div>
     </div>
     """, unsafe_allow_html=True)

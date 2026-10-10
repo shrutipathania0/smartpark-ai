@@ -4,30 +4,31 @@ import pathlib
 # Base Directory
 BASE_DIR = pathlib.Path(__file__).parent.resolve()
 
-# Database Path (configurable, default relative to BASE_DIR)
+# Database Path
 DEFAULT_DB_PATH = os.getenv("DB_PATH", str(BASE_DIR / "smartpark.db"))
 
 # Application Metadata
 APP_NAME = "SmartPark AI"
-APP_TAGLINE = "Intelligent Parking Management & Conversational Assistant"
+APP_TAGLINE = "Next-Gen Intelligent Mobility & Conversational Assistant"
 VERSION = "1.0.0"
 
-# Theme Colors (Dark Navy, Electric Blue Accents, Vibrant Indicators)
+# Premium Theme Tokens (Dark Navy, Glassmorphism, Neon Indicators)
 COLORS = {
     "background": "#0B132B",
     "secondary_bg": "#1C2541",
     "card_bg": "#1E293B",
+    "card_border": "#334155",
     "text_primary": "#F8FAFC",
     "text_secondary": "#94A3B8",
     "accent_blue": "#00B4D8",
     "accent_cyan": "#48CAE4",
-    "status_available": "#00E676",  # Green
-    "status_occupied": "#FF5252",   # Red
-    "status_reserved": "#FFD600",   # Yellow / Gold
-    "status_uncertain": "#FF9100",  # Amber
+    "status_available": "#00E676",  # Vibrant Green
+    "status_occupied": "#FF5252",   # Vibrant Red
+    "status_reserved": "#FFD600",   # Electric Gold / Yellow
+    "status_uncertain": "#FF9100",  # Neon Amber
 }
 
-# Default Parking Lot Slot Master Data (24 Slots across 4 Zones)
+# Default Parking Lot Master Data (24 Slots across 4 Zones)
 DEFAULT_SLOTS = [
     # Zone A (Near Entrance - Premium / SUV)
     {"slot_id": "A01", "zone": "Zone A", "type": "SUV", "hourly_price": 60, "distance_m": 15, "has_ev": False, "is_accessible": False, "bbox": [50, 50, 150, 120]},
@@ -63,10 +64,7 @@ DEFAULT_SLOTS = [
 ]
 
 def get_groq_api_key() -> str:
-    """
-    Safely retrieves the Groq API key from Streamlit secrets or environment variables.
-    Never crashes if Streamlit is not imported or secrets missing.
-    """
+    """Safely retrieves Groq API key without crashing."""
     try:
         import streamlit as st
         if hasattr(st, "secrets") and "GROQ_API_KEY" in st.secrets:
