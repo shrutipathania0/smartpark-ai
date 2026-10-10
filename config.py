@@ -1,6 +1,5 @@
 import os
 import pathlib
-import streamlit as st
 
 # Base Directory
 BASE_DIR = pathlib.Path(__file__).parent.resolve()
@@ -63,14 +62,14 @@ DEFAULT_SLOTS = [
     {"slot_id": "D06", "zone": "Zone D", "type": "SUV", "hourly_price": 35, "distance_m": 115, "has_ev": False, "is_accessible": False, "bbox": [650, 380, 750, 450]},
 ]
 
-
 def get_groq_api_key() -> str:
     """
     Safely retrieves the Groq API key from Streamlit secrets or environment variables.
-    Never crashes if missing.
+    Never crashes if Streamlit is not imported or secrets missing.
     """
     try:
-        if "GROQ_API_KEY" in st.secrets:
+        import streamlit as st
+        if hasattr(st, "secrets") and "GROQ_API_KEY" in st.secrets:
             return st.secrets["GROQ_API_KEY"]
     except Exception:
         pass

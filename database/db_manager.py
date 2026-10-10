@@ -50,6 +50,11 @@ def auto_expire_reservations(db_path: Optional[str] = None) -> int:
     
     with get_connection(target_path) as conn:
         cursor = conn.cursor()
+        # Ensure reservations table exists before querying
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='reservations';")
+        if not cursor.fetchone():
+            return 0
+            
         cursor.execute("""
             SELECT reservation_id, slot_id FROM reservations
             WHERE status = 'active' AND end_time <= ?;
@@ -74,6 +79,7 @@ def auto_expire_reservations(db_path: Optional[str] = None) -> int:
 def get_all_slots(db_path: Optional[str] = None) -> List[Dict[str, Any]]:
     """Returns all slots merged with bounding box definitions from config."""
     target_path = db_path or DB_PATH
+    init_db(target_path)
     auto_expire_reservations(target_path)
     
     bbox_map = {s["slot_id"]: s.get("bbox", [0, 0, 100, 100]) for s in config.DEFAULT_SLOTS}

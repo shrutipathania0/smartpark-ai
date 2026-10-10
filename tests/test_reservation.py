@@ -9,8 +9,11 @@ def temp_db():
     os.close(db_fd)
     db_manager.init_db(db_path)
     yield db_path
-    if os.path.exists(db_path):
-        os.remove(db_path)
+    try:
+        if os.path.exists(db_path):
+            os.remove(db_path)
+    except PermissionError:
+        pass
 
 def test_reservation_lifecycle(temp_db):
     # Make a reservation

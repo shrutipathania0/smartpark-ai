@@ -1,11 +1,11 @@
 from typing import List, Dict, Any, Optional
 
 VEHICLE_SLOT_COMPATIBILITY = {
-    "SUV": ["SUV", "Standard"],
-    "Sedan": ["Standard", "SUV", "Compact"],
-    "Compact": ["Compact", "Standard", "SUV"],
-    "EV": ["EV", "Standard", "SUV"],
-    "Motorcycle": ["Compact", "Standard", "SUV"]
+    "SUV": ["SUV", "Standard", "EV"],
+    "Sedan": ["Standard", "SUV", "Compact", "EV"],
+    "Compact": ["Compact", "Standard", "SUV", "EV"],
+    "EV": ["EV", "Standard", "SUV", "Compact"],
+    "Motorcycle": ["Compact", "Standard", "SUV", "EV"]
 }
 
 def rank_parking_slots(
