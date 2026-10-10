@@ -9,23 +9,23 @@ DEFAULT_DB_PATH = os.getenv("DB_PATH", str(BASE_DIR / "smartpark.db"))
 
 # Application Metadata
 APP_NAME = "SmartPark AI"
-APP_TAGLINE = "Next-Gen Intelligent Mobility & Conversational Assistant"
+APP_TAGLINE = "Simple, Intelligent Parking Management & Assistant"
 VERSION = "1.0.0"
 
-# Premium Theme Tokens (Dark Navy, Glassmorphism, Neon Indicators)
+# Fresh Mint / Emerald Theme Tokens (Inspired by Modern Mobility UI)
 COLORS = {
-    "background": "#0B132B",
-    "secondary_bg": "#1C2541",
-    "card_bg": "#1E293B",
-    "card_border": "#334155",
-    "text_primary": "#F8FAFC",
-    "text_secondary": "#94A3B8",
-    "accent_blue": "#00B4D8",
-    "accent_cyan": "#48CAE4",
-    "status_available": "#00E676",  # Vibrant Green
-    "status_occupied": "#FF5252",   # Vibrant Red
-    "status_reserved": "#FFD600",   # Electric Gold / Yellow
-    "status_uncertain": "#FF9100",  # Neon Amber
+    "background": "#E8F5E9",
+    "secondary_bg": "#FFFFFF",
+    "card_bg": "#FFFFFF",
+    "card_border": "#E5E7EB",
+    "text_primary": "#1F2937",
+    "text_secondary": "#4B5563",
+    "accent_green": "#4CAF50",
+    "accent_pink": "#FF2D55",
+    "accent_yellow": "#FFCC00",
+    "status_available": "#4CAF50",  # Fresh Green
+    "status_occupied": "#EF4444",   # Clean Red
+    "status_reserved": "#F59E0B",   # Warm Amber
 }
 
 # Default Parking Lot Master Data (24 Slots across 4 Zones)
@@ -64,7 +64,7 @@ DEFAULT_SLOTS = [
 ]
 
 def get_groq_api_key() -> str:
-    """Safely retrieves Groq API key without crashing."""
+    """Safely retrieves Groq API key."""
     try:
         import streamlit as st
         if hasattr(st, "secrets") and "GROQ_API_KEY" in st.secrets:
