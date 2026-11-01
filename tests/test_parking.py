@@ -51,7 +51,7 @@ class TestParkingSimulation(unittest.TestCase):
         self.assertEqual(slot_blocked["previous_status"], "VACANT")
 
         # Verify alert created
-        alert = query_one("SELECT * FROM alerts WHERE slot_id = ? AND alert_type = 'OBJECT_OBSTRUCTION';", (slot["id"],))
+        alert = query_one("SELECT * FROM alerts WHERE slot_id = ? AND alert_type = 'OBJECT_OBSTRUCTION' ORDER BY id DESC LIMIT 1;", (slot["id"],))
         self.assertIsNotNone(alert)
         self.assertEqual(alert["status"], "OPEN")
 

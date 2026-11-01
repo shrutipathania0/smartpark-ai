@@ -77,7 +77,7 @@ def run_anpr_pipeline(
     h, w = image.shape[:2]
 
     # Step 1: Detect Number Plate with YOLO
-    detections = detect_number_plates(image, conf_threshold=0.25)
+    detections = detect_number_plates(image, conf_threshold=0.15)
 
     if not detections:
         # Fallback heuristic: Try a central region crop if detector doesn't trigger on close-up webcam view

@@ -28,3 +28,8 @@ models/ocr/*.pth
 Thumbs.db
 *.swp
 *.bak
+
+# Runtime data & captures
+data/captures/
+data/*.log
+.streamlit/credentials.toml

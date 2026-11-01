@@ -34,7 +34,7 @@ def reload_detector(model_path: str = DEFAULT_MODEL_PATH):
 
 def detect_number_plates(
     image: np.ndarray,
-    conf_threshold: float = 0.25,
+    conf_threshold: float = 0.15,
     imgsz: int = 480
 ) -> List[Dict[str, Any]]:
     """
