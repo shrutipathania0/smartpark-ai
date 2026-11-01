@@ -105,30 +105,37 @@ See [training/reports/hardware_and_environment.md](training/reports/hardware_and
 
 ---
 
-## 5. Quick Local Startup
+## 5. Deployment Options
 
-### Windows (One-Click)
-Double-click `run.bat` or run in terminal:
+### Option A: Local Streamlit Dashboard (One-Click)
+Double-click `run_streamlit.bat` or run:
+```cmd
+smartpark-env\Scripts\streamlit.exe run streamlit_app.py
+```
+*Access locally at:* **`http://localhost:8501`**
+
+### Option B: Local Flask Web Application (One-Click)
+Double-click `run.bat` or run:
 ```cmd
 run.bat
 ```
+*Access locally at:* **`http://127.0.0.1:8000`**
 
-### Linux / macOS
-```bash
-chmod +x run.sh
-./run.sh
-```
-
-### Direct Python Command
-```bash
-smartpark-env\Scripts\python.exe app.py
-```
-
-Open your browser to: **`http://127.0.0.1:8000`**
-
-### Guard Login Credentials
-- **Username:** `guard_admin`
-- **Password:** `GuardPass@2026`
+### Option C: GitHub & Streamlit Community Cloud Deployment
+1. **Push to your GitHub:**
+   - Create a new repository on [GitHub](https://github.com/new) named `SmartPark-AI`.
+   - Link and push this repository:
+     ```bash
+     git remote add origin https://github.com/<YOUR_USERNAME>/SmartPark-AI.git
+     git push -u origin main
+     ```
+2. **Deploy to Streamlit Cloud:**
+   - Go to [share.streamlit.io](https://share.streamlit.io/) and log in with your GitHub account.
+   - Click **New app**.
+   - Select Repository: `<YOUR_USERNAME>/SmartPark-AI`.
+   - Branch: `main`.
+   - Main file path: `streamlit_app.py`.
+   - Click **Deploy!** Your app will be live with a public URL.
 
 ---
 
