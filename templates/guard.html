@@ -1,0 +1,350 @@
+{% extends "base.html" %}
+
+{% block title %}SmartPark AI - Guard Security Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Guard Station Dashboard</h1>
+    <p class="page-subtitle">Security Operations, Telemetry Analytics & Pricing Management</p>
+  </div>
+  <div style="display: flex; gap: 0.75rem; align-items: center;">
+    <div style="background-color: var(--bg-card); padding: 0.4rem 0.85rem; border-radius: 8px; font-size: 0.88rem; border: 1px solid var(--border-color);">
+      Guard Officer: <strong style="color: #38bdf8;">{{ guard_user }}</strong>
+    </div>
+    <button id="btnLogout" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">Logout</button>
+  </div>
+</div>
+
+<!-- Live Telemetry KPI Cards -->
+<div class="grid-4" style="margin-bottom: 2rem;">
+  <div class="card" style="border-left: 4px solid #38bdf8;">
+    <div style="font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600;">Total Facility Stalls</div>
+    <div style="font-size: 2rem; font-weight: 800; margin-top: 0.35rem;" id="kpiTotalSlots">15</div>
+    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">
+      <span id="kpiVacantSlots" style="color: #10b981; font-weight: 700;">--</span> Vacant &bull; 
+      <span id="kpiReservedSlots" style="color: #f59e0b; font-weight: 700;">--</span> Reserved &bull; 
+      <span id="kpiOccupiedSlots" style="color: #ef4444; font-weight: 700;">--</span> Occupied
+    </div>
+  </div>
+
+  <div class="card" style="border-left: 4px solid #10b981;">
+    <div style="font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600;">Active Sessions</div>
+    <div style="font-size: 2rem; font-weight: 800; margin-top: 0.35rem;" id="kpiActiveSessions">0</div>
+    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">
+      Today: <span id="kpiTodayEntries" style="font-weight: 700; color: #fff;">0</span> Entries &bull; 
+      <span id="kpiTodayExits" style="font-weight: 700; color: #fff;">0</span> Exits
+    </div>
+  </div>
+
+  <div class="card" style="border-left: 4px solid #f59e0b;">
+    <div style="font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600;">Today's Revenue</div>
+    <div style="font-size: 2rem; font-weight: 800; margin-top: 0.35rem; color: #34d399;" id="kpiRevenue">₹0.00</div>
+    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">Billed from completed exit sessions</div>
+  </div>
+
+  <div class="card" style="border-left: 4px solid #ef4444;">
+    <div style="font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600;">Active Alerts & Incidents</div>
+    <div style="font-size: 2rem; font-weight: 800; margin-top: 0.35rem; color: #f87171;" id="kpiOpenAlerts">0</div>
+    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">
+      <span id="kpiBlockedSlots">0</span> slots physically blocked
+    </div>
+  </div>
+</div>
+
+<!-- Tabs for Alerts, Dynamic Pricing & Activity History -->
+<div class="card" style="margin-bottom: 2rem;">
+  <div style="display: flex; gap: 0.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 1.25rem;">
+    <button class="btn btn-secondary active" id="tabAlertsBtn" onclick="switchGuardTab('alerts')">Active Incidents & Alerts</button>
+    <button class="btn btn-secondary" id="tabPricingBtn" onclick="switchGuardTab('pricing')">Dynamic Pricing Rules</button>
+    <button class="btn btn-secondary" id="tabHistoryBtn" onclick="switchGuardTab('history')">Recent Vehicle Audit Trail</button>
+  </div>
+
+  <!-- Tab 1: Alerts & Incidents -->
+  <div id="tabAlertsSection">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+      <h3 style="font-size: 1.15rem; font-weight: 700;">Incident & Violation Monitoring</h3>
+      <button class="btn btn-secondary" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;" onclick="loadGuardDashboard()">Refresh Alerts</button>
+    </div>
+    <div style="overflow-x: auto;">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Type</th>
+            <th>Severity</th>
+            <th>Description</th>
+            <th>Slot / Location</th>
+            <th>Vehicle Reg</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="alertsTableBody">
+          <tr><td colspan="8" style="text-align: center; color: var(--text-muted);">Loading incidents...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Tab 2: Dynamic Pricing Rules -->
+  <div id="tabPricingSection" style="display: none;">
+    <div style="margin-bottom: 1.25rem;">
+      <h3 style="font-size: 1.15rem; font-weight: 700;">Facility Pricing & Tariff Control</h3>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">
+        &bull; <strong>Default Policy:</strong> 60m free + 10m grace = 70m total free. Then ₹50 per started 2-hour block.<br>
+        &bull; <strong>Pricing Snapshot Rule:</strong> Active sessions lock pricing rules at parking start; changes affect future sessions only.
+      </p>
+    </div>
+
+    <div class="grid-3" id="pricingCardsGrid">
+      <!-- Injected via JavaScript -->
+    </div>
+  </div>
+
+  <!-- Tab 3: Recent Activity History -->
+  <div id="tabHistorySection" style="display: none;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+      <h3 style="font-size: 1.15rem; font-weight: 700;">Recent Parking Sessions Audit</h3>
+      <button class="btn btn-secondary" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;" onclick="loadHistory()">Refresh Logs</button>
+    </div>
+    <div style="overflow-x: auto;">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Ticket ID</th>
+            <th>Registration</th>
+            <th>Category</th>
+            <th>Slot</th>
+            <th>Entry Time</th>
+            <th>Parked Start</th>
+            <th>Exit Time</th>
+            <th>Status</th>
+            <th>Final Fee</th>
+          </tr>
+        </thead>
+        <tbody id="historyTableBody">
+          <tr><td colspan="9" style="text-align: center; color: var(--text-muted);">Loading session history...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function loadGuardDashboard() {
+  try {
+    const res = await fetch("/api/guard/dashboard");
+    const data = await res.json();
+    if (data.success) {
+      const s = data.stats;
+      document.getElementById("kpiTotalSlots").textContent = s.total_slots;
+      document.getElementById("kpiVacantSlots").textContent = s.vacant_slots;
+      document.getElementById("kpiReservedSlots").textContent = s.reserved_slots;
+      document.getElementById("kpiOccupiedSlots").textContent = s.occupied_slots;
+      document.getElementById("kpiActiveSessions").textContent = s.active_sessions;
+      document.getElementById("kpiTodayEntries").textContent = s.today_entries;
+      document.getElementById("kpiTodayExits").textContent = s.today_exits;
+      document.getElementById("kpiRevenue").textContent = `₹${s.today_revenue.toFixed(2)}`;
+      document.getElementById("kpiOpenAlerts").textContent = s.open_alerts;
+      document.getElementById("kpiBlockedSlots").textContent = s.blocked_slots;
+    }
+  } catch (err) {
+    console.error("Dashboard stats error:", err);
+  }
+
+  loadAlerts();
+}
+
+async function loadAlerts() {
+  try {
+    const res = await fetch("/api/guard/alerts");
+    const data = await res.json();
+    if (data.success) {
+      renderAlertsTable(data.alerts);
+    }
+  } catch (err) {
+    console.error("Alerts error:", err);
+  }
+}
+
+function renderAlertsTable(alerts) {
+  const tbody = document.getElementById("alertsTableBody");
+  if (!alerts || alerts.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No active security incidents or alerts.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = alerts.map(a => {
+    let sevBadge = `<span class="badge badge-low">${a.severity}</span>`;
+    if (a.severity === "CRITICAL" || a.severity === "HIGH") {
+      sevBadge = `<span class="badge" style="background-color: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid #ef4444;">${a.severity}</span>`;
+    } else if (a.severity === "MEDIUM") {
+      sevBadge = `<span class="badge badge-medium">${a.severity}</span>`;
+    }
+
+    let statusBadge = `<span class="badge badge-high">${a.status}</span>`;
+    if (a.status === "OPEN") {
+      statusBadge = `<span class="badge" style="background-color: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444;">OPEN</span>`;
+    } else if (a.status === "ACKNOWLEDGED") {
+      statusBadge = `<span class="badge badge-medium">ACKNOWLEDGED</span>`;
+    }
+
+    let actionBtns = "";
+    if (a.status === "OPEN") {
+      actionBtns = `
+        <button class="btn btn-warning" style="padding: 0.25rem 0.5rem; font-size: 0.78rem;" onclick="ackAlert(${a.id})">Acknowledge</button>
+        <button class="btn btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.78rem;" onclick="resolveAlert(${a.id})">Resolve</button>
+      `;
+    } else if (a.status === "ACKNOWLEDGED") {
+      actionBtns = `
+        <button class="btn btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.78rem;" onclick="resolveAlert(${a.id})">Resolve</button>
+      `;
+    } else {
+      actionBtns = `<span style="font-size: 0.8rem; color: var(--text-muted);">Resolved</span>`;
+    }
+
+    return `
+      <tr>
+        <td>#${a.id}</td>
+        <td><strong>${a.alert_type}</strong></td>
+        <td>${sevBadge}</td>
+        <td>${a.description}</td>
+        <td>${a.slot_number ? 'Slot ' + a.slot_number : (a.lane_id || '--')}</td>
+        <td><code>${a.registration_number || '--'}</code></td>
+        <td>${statusBadge}</td>
+        <td><div style="display: flex; gap: 0.35rem;">${actionBtns}</div></td>
+      </tr>
+    `;
+  }).join("");
+}
+
+async function ackAlert(id) {
+  await fetch(`/api/guard/alerts/${id}/acknowledge`, { method: "POST" });
+  loadAlerts();
+}
+
+async function resolveAlert(id) {
+  await fetch(`/api/guard/alerts/${id}/resolve`, { method: "POST" });
+  loadAlerts();
+}
+
+// Pricing Tab
+async function loadPricing() {
+  try {
+    const res = await fetch("/api/guard/pricing");
+    const data = await res.json();
+    if (data.success) {
+      renderPricingCards(data.pricing_rules);
+    }
+  } catch (err) {
+    console.error("Pricing error:", err);
+  }
+}
+
+function renderPricingCards(rules) {
+  const grid = document.getElementById("pricingCardsGrid");
+  grid.innerHTML = Object.values(rules).map(r => `
+    <div class="card" style="border-top: 4px solid #38bdf8;">
+      <h4 style="font-size: 1.1rem; margin-bottom: 0.75rem;">${r.category}</h4>
+      <div class="form-group">
+        <label class="form-label">Free Period (Minutes)</label>
+        <input type="number" id="free_${r.category}" class="form-input" value="${r.free_minutes}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Grace Period (Minutes)</label>
+        <input type="number" id="grace_${r.category}" class="form-input" value="${r.grace_minutes}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Charge Rate (₹)</label>
+        <input type="number" id="charge_${r.category}" class="form-input" value="${r.charge_amount}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Billing Interval (Minutes)</label>
+        <input type="number" id="interval_${r.category}" class="form-input" value="${r.billing_interval_minutes}">
+      </div>
+      <button class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;" onclick="savePricing('${r.category}')">
+        Update ${r.category} Rate
+      </button>
+    </div>
+  `).join("");
+}
+
+async function savePricing(category) {
+  const freeMins = document.getElementById(`free_${category}`).value;
+  const graceMins = document.getElementById(`grace_${category}`).value;
+  const chargeAmt = document.getElementById(`charge_${category}`).value;
+  const intervalMins = document.getElementById(`interval_${category}`).value;
+
+  try {
+    const res = await fetch("/api/guard/pricing", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        category: category,
+        free_minutes: parseInt(freeMins),
+        grace_minutes: parseInt(graceMins),
+        charge_amount: parseFloat(chargeAmt),
+        billing_interval_minutes: parseInt(intervalMins),
+        rounding_policy: "CEIL_INTERVAL"
+      })
+    });
+    const data = await res.json();
+    alert(data.message);
+  } catch (err) {
+    alert("Failed to update pricing.");
+  }
+}
+
+// History Tab
+async function loadHistory() {
+  try {
+    const res = await fetch("/api/guard/history");
+    const data = await res.json();
+    if (data.success) {
+      const tbody = document.getElementById("historyTableBody");
+      tbody.innerHTML = data.recent_sessions.map(s => `
+        <tr>
+          <td><code>${s.ticket_id}</code></td>
+          <td><strong>${s.registration_number}</strong></td>
+          <td>${s.parking_category}</td>
+          <td>Slot ${s.slot_number}</td>
+          <td>${s.entry_time || '--'}</td>
+          <td>${s.parked_start_time || '--'}</td>
+          <td>${s.exit_time || '--'}</td>
+          <td><span class="badge badge-${s.status === 'COMPLETED' ? 'vacant' : (s.status === 'ACTIVE' ? 'reserved' : 'blocked')}">${s.status}</span></td>
+          <td>₹${s.final_amount.toFixed(2)}</td>
+        </tr>
+      `).join("");
+    }
+  } catch (err) {
+    console.error("History fetch error:", err);
+  }
+}
+
+function switchGuardTab(tab) {
+  document.getElementById("tabAlertsSection").style.display = tab === "alerts" ? "block" : "none";
+  document.getElementById("tabPricingSection").style.display = tab === "pricing" ? "block" : "none";
+  document.getElementById("tabHistorySection").style.display = tab === "history" ? "block" : "none";
+
+  document.getElementById("tabAlertsBtn").classList.toggle("active", tab === "alerts");
+  document.getElementById("tabPricingBtn").classList.toggle("active", tab === "pricing");
+  document.getElementById("tabHistoryBtn").classList.toggle("active", tab === "history");
+
+  if (tab === "pricing") loadPricing();
+  if (tab === "history") loadHistory();
+}
+
+// Logout
+document.getElementById("btnLogout").addEventListener("click", async () => {
+  await fetch("/api/guard/logout", { method: "POST" });
+  window.location.href = "/guard/login";
+});
+
+loadGuardDashboard();
+setInterval(loadGuardDashboard, 4000);
+</script>
+{% endblock %}
+

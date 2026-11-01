@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}SmartPark AI - Operations Portal{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">SmartPark AI Facility Portal</h1>
+    <p class="page-subtitle">Autonomous IoT parking management powered by real-time computer vision ANPR</p>
+  </div>
+</div>
+
+<div class="grid-4" style="margin-bottom: 2rem;">
+  <div class="card" style="text-align: center; border-top: 4px solid #38bdf8;">
+    <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">🚘</div>
+    <h3 style="margin-bottom: 0.5rem;">Driver Entry</h3>
+    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.25rem;">Automated webcam ANPR scanning, category selection, and slot reservation.</p>
+    <a href="/entry" class="btn btn-primary" style="width: 100%;">Open Entry Gate</a>
+  </div>
+
+  <div class="card" style="text-align: center; border-top: 4px solid #10b981;">
+    <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">🅿️</div>
+    <h3 style="margin-bottom: 0.5rem;">Parking Area</h3>
+    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.25rem;">Live interactive spatial grid with simulation engine for incidents & violations.</p>
+    <a href="/parking" class="btn btn-primary" style="width: 100%;">View Live Grid</a>
+  </div>
+
+  <div class="card" style="text-align: center; border-top: 4px solid #f59e0b;">
+    <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">🛡️</div>
+    <h3 style="margin-bottom: 0.5rem;">Guard Station</h3>
+    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.25rem;">Security dashboard, live facility analytics, alert resolution & dynamic pricing.</p>
+    <a href="/guard" class="btn btn-primary" style="width: 100%;">Guard Login</a>
+  </div>
+
+  <div class="card" style="text-align: center; border-top: 4px solid #ef4444;">
+    <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">🏁</div>
+    <h3 style="margin-bottom: 0.5rem;">Driver Exit</h3>
+    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.25rem;">Exit ANPR verification, session duration billing & automated slot release.</p>
+    <a href="/exit" class="btn btn-primary" style="width: 100%;">Open Exit Gate</a>
+  </div>
+</div>
+
+<div class="card" style="margin-bottom: 2rem;">
+  <h3 style="margin-bottom: 1rem;">System Architecture & Flow</h3>
+  <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 1rem; text-align: center;">
+    <div style="flex: 1; min-width: 180px; padding: 1rem; background-color: var(--bg-card); border-radius: 8px;">
+      <div style="font-weight: 700; color: #38bdf8; margin-bottom: 0.35rem;">1. Detection</div>
+      <div style="font-size: 0.85rem; color: var(--text-secondary);">Custom YOLOv8 local plate detector extracts high-accuracy bounding box</div>
+    </div>
+    <div style="flex: 1; min-width: 180px; padding: 1rem; background-color: var(--bg-card); border-radius: 8px;">
+      <div style="font-weight: 700; color: #38bdf8; margin-bottom: 0.35rem;">2. OCR & Validation</div>
+      <div style="font-size: 0.85rem; color: var(--text-secondary);">OpenCV CLAHE + EasyOCR with Indian RTO position-aware character normalization</div>
+    </div>
+    <div style="flex: 1; min-width: 180px; padding: 1rem; background-color: var(--bg-card); border-radius: 8px;">
+      <div style="font-weight: 700; color: #38bdf8; margin-bottom: 0.35rem;">3. Spatial Allocation</div>
+      <div style="font-size: 0.85rem; color: var(--text-secondary);">Strict category compatibility (Disabled, EV, Normal) with zero cross-allocation</div>
+    </div>
+    <div style="flex: 1; min-width: 180px; padding: 1rem; background-color: var(--bg-card); border-radius: 8px;">
+      <div style="font-weight: 700; color: #38bdf8; margin-bottom: 0.35rem;">4. Billing Engine</div>
+      <div style="font-size: 0.85rem; color: var(--text-secondary);">60m free + 10m grace = 70m free; pricing snapshots lock session integrity</div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

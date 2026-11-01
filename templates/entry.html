@@ -1,0 +1,401 @@
+{% extends "base.html" %}
+
+{% block title %}SmartPark AI - Driver Entry Kiosk{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Entry Gate Kiosk</h1>
+    <p class="page-subtitle">Automatic Number Plate Recognition (ANPR) & Slot Allocation</p>
+  </div>
+  <div>
+    <span class="badge" style="background-color: #0284c7; color: white;">GATE 01 &bull; INBOUND</span>
+  </div>
+</div>
+
+<div class="grid-2">
+  <!-- Left Column: Camera Feed & Recognition Preview -->
+  <div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+      <h3 style="font-size: 1.15rem; font-weight: 600;">Automated Gate Camera</h3>
+      <div style="display: flex; gap: 0.5rem;">
+        <button id="btnToggleCamera" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">Start Camera</button>
+        <button id="btnScanPlate" class="btn btn-primary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">Capture & Scan</button>
+      </div>
+    </div>
+
+    <!-- Live Video / Canvas Viewport -->
+    <div class="camera-wrapper" id="cameraViewport">
+      <video id="webcamVideo" class="camera-feed" autoplay playsinline muted style="display: none;"></video>
+      <canvas id="cameraCanvas" class="canvas-overlay"></canvas>
+      <div class="camera-scanline"></div>
+      <div id="cameraPlaceholder" style="text-align: center; color: var(--text-muted); padding: 1rem;">
+        <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📷</div>
+        <div>Live webcam preview inactive</div>
+        <div style="font-size: 0.8rem; margin-top: 0.35rem;">Click "Start Camera" or "Capture & Scan" to recognize plate</div>
+      </div>
+    </div>
+
+    <!-- Cropped Plate & OCR Feedback -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.25rem;">
+      <div>
+        <label class="form-label">Cropped License Plate</label>
+        <div class="plate-preview-box">
+          <img id="plateCropImg" class="plate-preview-img" style="display: none;" alt="Plate Crop">
+          <span id="plateCropPlaceholder" style="font-size: 0.8rem; color: var(--text-muted);">No plate cropped yet</span>
+        </div>
+      </div>
+      <div>
+        <label class="form-label">ANPR Confidence & Format</label>
+        <div style="background-color: #0b1120; border-radius: 8px; border: 1px solid var(--border-color); padding: 0.75rem; min-height: 110px; display: flex; flex-direction: column; justify-content: center;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+            <span style="font-size: 0.82rem; color: var(--text-secondary);">Confidence:</span>
+            <span id="confidenceBadge" class="badge badge-low">Awaiting Scan</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+            <span style="font-size: 0.82rem; color: var(--text-secondary);">State / RTO:</span>
+            <span id="stateCodeText" style="font-size: 0.88rem; font-weight: 700; color: #38bdf8;">--</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 0.82rem; color: var(--text-secondary);">Format:</span>
+            <span id="formatTypeText" style="font-size: 0.82rem; color: var(--text-muted);">--</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Column: Verification & Slot Allocation -->
+  <div class="card">
+    <h3 style="font-size: 1.15rem; font-weight: 600; margin-bottom: 1.25rem;">Driver Verification & Category Selection</h3>
+
+    <form id="entryForm" onsubmit="return false;">
+      <div class="form-group">
+        <label class="form-label" for="regInput">Vehicle Registration Number</label>
+        <div style="position: relative;">
+          <input type="text" id="regInput" class="form-input" placeholder="e.g. DL01AB1234 or RJ11GB1604" style="text-transform: uppercase; font-weight: 700; font-size: 1.2rem; letter-spacing: 1px;" required>
+          <div id="autofillNotice" style="font-size: 0.78rem; color: #10b981; margin-top: 0.35rem; display: none;">
+            &check; Automatically populated from high-confidence ANPR
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Select Parking Category</label>
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+          Allocation guarantees strict category compatibility. Incompatible slots are never assigned.
+        </p>
+
+        <div style="display: flex; flex-direction: column; gap: 0.65rem;">
+          <label style="display: flex; align-items: center; justify-content: space-between; padding: 0.85rem 1rem; background-color: #0f172a; border: 1px solid var(--border-color); border-radius: 8px; cursor: pointer;">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <input type="radio" name="parkingCategory" value="Disabled Parking">
+              <span style="font-weight: 600;">♿ Disabled Parking</span>
+            </div>
+            <span id="availDisabled" class="badge badge-vacant">-- Available</span>
+          </label>
+
+          <label style="display: flex; align-items: center; justify-content: space-between; padding: 0.85rem 1rem; background-color: #0f172a; border: 1px solid var(--border-color); border-radius: 8px; cursor: pointer;">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <input type="radio" name="parkingCategory" value="EV Charging Parking">
+              <span style="font-weight: 600;">⚡ EV Charging Parking</span>
+            </div>
+            <span id="availEV" class="badge badge-vacant">-- Available</span>
+          </label>
+
+          <label style="display: flex; align-items: center; justify-content: space-between; padding: 0.85rem 1rem; background-color: #0f172a; border: 1px solid var(--border-color); border-radius: 8px; cursor: pointer;">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <input type="radio" name="parkingCategory" value="Normal Parking" checked>
+              <span style="font-weight: 600;">🚗 Normal Parking</span>
+            </div>
+            <span id="availNormal" class="badge badge-vacant">-- Available</span>
+          </label>
+        </div>
+      </div>
+
+      <div id="entryAlertMsg" style="display: none; padding: 0.85rem; border-radius: 8px; margin-bottom: 1.25rem; font-size: 0.9rem;"></div>
+
+      <button type="button" id="btnAllocateSlot" class="btn btn-primary" style="width: 100%; padding: 0.9rem; font-size: 1.05rem;">
+        Confirm & Allocate Slot
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- Digital Ticket Modal -->
+<div id="ticketModal" class="modal-overlay">
+  <div class="modal-content" style="max-width: 440px;">
+    <div class="ticket-card">
+      <div class="ticket-header">
+        <div class="ticket-title">SMARTPARK AI</div>
+        <div style="font-size: 0.8rem; color: #64748b; margin-top: 0.2rem;">DIGITAL PARKING PERMIT</div>
+      </div>
+
+      <div class="ticket-row">
+        <span>TICKET ID:</span>
+        <strong id="ticketIdVal">--</strong>
+      </div>
+      <div class="ticket-row">
+        <span>VEHICLE REG:</span>
+        <strong id="ticketRegVal" style="font-size: 1.15rem; color: #0284c7;">--</strong>
+      </div>
+      <div class="ticket-row">
+        <span>CATEGORY:</span>
+        <strong id="ticketCatVal">--</strong>
+      </div>
+      <div class="ticket-row bold" style="background-color: #f1f5f9; padding: 0.5rem; border-radius: 4px;">
+        <span>ASSIGNED SLOT:</span>
+        <strong id="ticketSlotVal" style="font-size: 1.5rem; color: #0f172a;">--</strong>
+      </div>
+      <div class="ticket-row">
+        <span>ENTRY TIME:</span>
+        <span id="ticketTimeVal">--</span>
+      </div>
+      <div class="ticket-row">
+        <span>STATUS:</span>
+        <span class="badge badge-reserved" id="ticketStatusVal">RESERVED</span>
+      </div>
+
+      <div style="text-align: center; margin-top: 1.25rem; padding-top: 0.75rem; border-top: 1px dashed #cbd5e1; font-size: 0.78rem; color: #64748b;">
+        Please proceed to your assigned slot.<br>Billing commences only after vehicle is parked.
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 0.5rem; margin-top: 1.25rem;">
+      <a href="/parking" class="btn btn-primary" style="flex: 1;">View in Parking Area &rarr;</a>
+      <button class="btn btn-secondary" onclick="closeTicketModal()">Close Kiosk</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let videoStream = null;
+const videoEl = document.getElementById("webcamVideo");
+const canvasEl = document.getElementById("cameraCanvas");
+const placeholderEl = document.getElementById("cameraPlaceholder");
+const btnToggleCamera = document.getElementById("btnToggleCamera");
+const btnScanPlate = document.getElementById("btnScanPlate");
+const regInput = document.getElementById("regInput");
+const plateCropImg = document.getElementById("plateCropImg");
+const plateCropPlaceholder = document.getElementById("plateCropPlaceholder");
+const confidenceBadge = document.getElementById("confidenceBadge");
+const stateCodeText = document.getElementById("stateCodeText");
+const formatTypeText = document.getElementById("formatTypeText");
+const autofillNotice = document.getElementById("autofillNotice");
+const btnAllocateSlot = document.getElementById("btnAllocateSlot");
+const entryAlertMsg = document.getElementById("entryAlertMsg");
+
+// Load live category availability
+async function refreshAvailability() {
+  try {
+    const res = await fetch("/api/entry/availability");
+    const data = await res.json();
+    if (data.success) {
+      const av = data.availability;
+      document.getElementById("availDisabled").textContent = `${av["Disabled Parking"].vacant} / ${av["Disabled Parking"].total} Vacant`;
+      document.getElementById("availEV").textContent = `${av["EV Charging Parking"].vacant} / ${av["EV Charging Parking"].total} Vacant`;
+      document.getElementById("availNormal").textContent = `${av["Normal Parking"].vacant} / ${av["Normal Parking"].total} Vacant`;
+    }
+  } catch (err) {
+    console.error("Availability fetch error:", err);
+  }
+}
+refreshAvailability();
+setInterval(refreshAvailability, 4000);
+
+// Camera handling
+btnToggleCamera.addEventListener("click", async () => {
+  if (videoStream) {
+    stopCamera();
+  } else {
+    await startCamera();
+  }
+});
+
+async function startCamera() {
+  try {
+    videoStream = await navigator.mediaDevices.getUserMedia({
+      video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: "environment" }
+    });
+    videoEl.srcObject = videoStream;
+    videoEl.style.display = "block";
+    placeholderEl.style.display = "none";
+    btnToggleCamera.textContent = "Stop Camera";
+    btnToggleCamera.classList.replace("btn-secondary", "btn-danger");
+  } catch (err) {
+    console.warn("Local webcam access failed or denied:", err);
+    showAlert("Camera permission denied or camera not found. Using local server capture fallback.", "warning");
+  }
+}
+
+function stopCamera() {
+  if (videoStream) {
+    videoStream.getTracks().forEach(t => t.stop());
+    videoStream = null;
+  }
+  videoEl.style.display = "none";
+  placeholderEl.style.display = "block";
+  btnToggleCamera.textContent = "Start Camera";
+  btnToggleCamera.classList.replace("btn-danger", "btn-secondary");
+  const ctx = canvasEl.getContext("2d");
+  ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
+}
+
+// ANPR Capture & Recognize
+btnScanPlate.addEventListener("click", async () => {
+  let frameBase64 = null;
+
+  if (videoStream && videoEl.videoWidth > 0) {
+    canvasEl.width = videoEl.videoWidth;
+    canvasEl.height = videoEl.videoHeight;
+    const ctx = canvasEl.getContext("2d");
+    ctx.drawImage(videoEl, 0, 0, canvasEl.width, canvasEl.height);
+    frameBase64 = canvasEl.toDataURL("image/jpeg", 0.9);
+  }
+
+  btnScanPlate.disabled = true;
+  btnScanPlate.textContent = "Scanning...";
+
+  try {
+    const res = await fetch("/api/entry/recognize", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ frame: frameBase64 })
+    });
+    const result = await res.json();
+    handleANPRResult(result);
+  } catch (err) {
+    console.error("ANPR Scan error:", err);
+    showAlert("Network communication error with ANPR engine.", "danger");
+  } finally {
+    btnScanPlate.disabled = false;
+    btnScanPlate.textContent = "Capture & Scan";
+  }
+});
+
+function handleANPRResult(res) {
+  if (!res.success) {
+    showAlert(res.error || "Plate scanning failed.", "danger");
+    return;
+  }
+
+  // Update preview image
+  if (res.crop_preview) {
+    plateCropImg.src = res.crop_preview;
+    plateCropImg.style.display = "block";
+    plateCropPlaceholder.style.display = "none";
+  }
+
+  // Draw bounding box if video is active
+  if (res.bbox && canvasEl.width > 0) {
+    const ctx = canvasEl.getContext("2d");
+    ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
+    const [x1, y1, x2, y2] = res.bbox;
+    ctx.strokeStyle = "#38bdf8";
+    ctx.lineWidth = 3;
+    ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
+    ctx.fillStyle = "#38bdf8";
+    ctx.font = "bold 16px sans-serif";
+    ctx.fillText(`PLATE: ${res.registration_number || "DETECTED"}`, x1, Math.max(20, y1 - 8));
+  }
+
+  // Badges & details
+  stateCodeText.textContent = res.state_code || "--";
+  formatTypeText.textContent = res.format_type || "UNKNOWN";
+
+  const tier = res.confidence_tier;
+  confidenceBadge.textContent = `${tier} (${Math.round(res.confidence * 100)}%)`;
+  confidenceBadge.className = `badge badge-${tier.toLowerCase()}`;
+
+  if (tier === "HIGH" && res.registration_number) {
+    regInput.value = res.registration_number;
+    autofillNotice.style.display = "block";
+    showAlert("High confidence plate recognized and populated.", "success");
+  } else if (tier === "MEDIUM" && res.registration_number) {
+    regInput.value = res.registration_number;
+    autofillNotice.style.display = "none";
+    showAlert("Medium confidence plate suggested. Please verify registration before confirming.", "warning");
+  } else {
+    autofillNotice.style.display = "none";
+    if (res.registration_number) regInput.value = res.registration_number;
+    showAlert("Plate recognized with low confidence. Please verify or manually enter registration.", "warning");
+  }
+}
+
+// Allocate Slot & Create Ticket
+btnAllocateSlot.addEventListener("click", async () => {
+  const reg = regInput.value.trim().toUpperCase();
+  const selectedCategory = document.querySelector('input[name="parkingCategory"]:checked')?.value;
+
+  if (!reg) {
+    showAlert("Please provide or scan a vehicle registration number.", "danger");
+    return;
+  }
+
+  btnAllocateSlot.disabled = true;
+  btnAllocateSlot.textContent = "Allocating Slot...";
+
+  try {
+    const res = await fetch("/api/entry/create-session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        registration_number: reg,
+        parking_category: selectedCategory
+      })
+    });
+    const data = await res.json();
+
+    if (!data.success) {
+      showAlert(data.message, "danger");
+    } else {
+      showTicket(data.ticket);
+      refreshAvailability();
+    }
+  } catch (err) {
+    console.error("Allocation error:", err);
+    showAlert("Server communication failed while allocating slot.", "danger");
+  } finally {
+    btnAllocateSlot.disabled = false;
+    btnAllocateSlot.textContent = "Confirm & Allocate Slot";
+  }
+});
+
+function showTicket(t) {
+  document.getElementById("ticketIdVal").textContent = t.ticket_id;
+  document.getElementById("ticketRegVal").textContent = t.registration_number;
+  document.getElementById("ticketCatVal").textContent = t.parking_category;
+  document.getElementById("ticketSlotVal").textContent = t.slot_number;
+  document.getElementById("ticketTimeVal").textContent = t.entry_time;
+  document.getElementById("ticketStatusVal").textContent = t.slot_status;
+  document.getElementById("ticketModal").style.display = "flex";
+}
+
+function closeTicketModal() {
+  document.getElementById("ticketModal").style.display = "none";
+  regInput.value = "";
+  autofillNotice.style.display = "none";
+}
+
+function showAlert(msg, type) {
+  entryAlertMsg.textContent = msg;
+  entryAlertMsg.style.display = "block";
+  if (type === "danger") {
+    entryAlertMsg.style.backgroundColor = "rgba(239, 68, 68, 0.15)";
+    entryAlertMsg.style.border = "1px solid #ef4444";
+    entryAlertMsg.style.color = "#fca5a5";
+  } else if (type === "warning") {
+    entryAlertMsg.style.backgroundColor = "rgba(245, 158, 11, 0.15)";
+    entryAlertMsg.style.border = "1px solid #f59e0b";
+    entryAlertMsg.style.color = "#fcd34d";
+  } else {
+    entryAlertMsg.style.backgroundColor = "rgba(16, 185, 129, 0.15)";
+    entryAlertMsg.style.border = "1px solid #10b981";
+    entryAlertMsg.style.color = "#6ee7b7";
+  }
+}
+</script>
+{% endblock %}
+

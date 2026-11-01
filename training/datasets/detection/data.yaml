@@ -1,0 +1,8 @@
+# SmartPark AI - YOLO Number Plate Detection Dataset
+path: C:/Users/shrut/OneDrive/Desktop/project 2/training/datasets/detection
+train: images/train
+val: images/val
+test: images/test
+
+names:
+  0: number_plate

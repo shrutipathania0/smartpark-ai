@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}SmartPark AI - Guard Authentication{% endblock %}
+
+{% block content %}
+<div style="max-width: 440px; margin: 3rem auto;">
+  <div class="card" style="border-top: 4px solid #f59e0b;">
+    <div style="text-align: center; margin-bottom: 1.5rem;">
+      <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🛡️</div>
+      <h2 style="font-size: 1.45rem; font-weight: 700;">Guard Access Portal</h2>
+      <p style="color: var(--text-secondary); font-size: 0.88rem; margin-top: 0.25rem;">
+        Authenticated personnel only. Secure station management.
+      </p>
+    </div>
+
+    <form id="guardLoginForm" onsubmit="return false;">
+      <div class="form-group">
+        <label class="form-label" for="usernameInput">Guard Username</label>
+        <input type="text" id="usernameInput" class="form-input" placeholder="e.g. guard_admin" value="guard_admin" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="passwordInput">Security Password</label>
+        <input type="password" id="passwordInput" class="form-input" placeholder="Enter password" value="GuardPass@2026" required>
+      </div>
+
+      <div id="loginErrorMsg" style="display: none; padding: 0.75rem; border-radius: 6px; background-color: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #fca5a5; font-size: 0.88rem; margin-bottom: 1.25rem;"></div>
+
+      <button type="button" id="btnLogin" class="btn btn-primary" style="width: 100%; padding: 0.85rem;">
+        Authenticate & Enter Dashboard
+      </button>
+
+      <div style="text-align: center; margin-top: 1rem; font-size: 0.8rem; color: var(--text-muted);">
+        Default local demonstration credentials:<br>
+        <code>guard_admin</code> / <code>GuardPass@2026</code>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById("btnLogin").addEventListener("click", async () => {
+  const u = document.getElementById("usernameInput").value.trim();
+  const p = document.getElementById("passwordInput").value.trim();
+  const errBox = document.getElementById("loginErrorMsg");
+
+  if (!u || !p) {
+    errBox.textContent = "Username and password are required.";
+    errBox.style.display = "block";
+    return;
+  }
+
+  try {
+    const res = await fetch("/api/guard/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username: u, password: p })
+    });
+    const data = await res.json();
+    if (data.success) {
+      window.location.href = "/guard";
+    } else {
+      errBox.textContent = data.message || "Invalid credentials.";
+      errBox.style.display = "block";
+    }
+  } catch (err) {
+    console.error("Login error:", err);
+    errBox.textContent = "Network error during authentication.";
+    errBox.style.display = "block";
+  }
+});
+</script>
+{% endblock %}
+

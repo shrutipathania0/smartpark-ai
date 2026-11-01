@@ -1,0 +1,30 @@
+# Python Bytecode & Cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual Environments
+smartpark-env/
+env/
+venv/
+ENV/
+
+# Large training runs and raw downloads
+runs/
+yolov8n.pt
+training/runs/
+training/dataset_discovery/raw_images/
+training/datasets/detection/images/train/
+training/datasets/detection/labels/train/
+training/datasets/recognition/images/
+
+# Models: keep custom trained YOLO detector
+models/ocr/*.pth
+!models/detector/best.pt
+
+# Local OS files
+.DS_Store
+Thumbs.db
+*.swp
+*.bak

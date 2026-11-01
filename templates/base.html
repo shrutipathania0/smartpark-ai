@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}SmartPark AI - Intelligent Parking Facility{% endblock %}</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/" class="nav-brand">
+      <span class="logo-badge">SmartPark</span>
+      <span>AI</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/" class="{% if request.path == '/' %}active{% endif %}">Home</a></li>
+      <li><a href="/entry" class="{% if request.path == '/entry' %}active{% endif %}">Entry Gate</a></li>
+      <li><a href="/parking" class="{% if request.path == '/parking' %}active{% endif %}">Parking Area</a></li>
+      <li><a href="/exit" class="{% if request.path == '/exit' %}active{% endif %}">Exit Gate</a></li>
+      <li><a href="/guard" class="{% if '/guard' in request.path %}active{% endif %}">Guard Dashboard</a></li>
+    </ul>
+    <div class="nav-status">
+      <span class="status-dot"></span>
+      <span id="systemStatusText">Local Facility Active</span>
+    </div>
+  </nav>
+
+  <main class="container">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer style="text-align: center; padding: 1.5rem; font-size: 0.85rem; color: var(--text-muted); border-top: 1px solid var(--border-color);">
+    SmartPark AI &copy; 2026 &bull; IoT Parking Management & Computer Vision ANPR System
+  </footer>
+
+  <script src="/static/js/main.js"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>
+

@@ -1,0 +1,376 @@
+{% extends "base.html" %}
+
+{% block title %}SmartPark AI - Driver Exit Gate{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Exit Gate Kiosk</h1>
+    <p class="page-subtitle">Autonomous Departure Verification, Duration Billing & Slot Clearance</p>
+  </div>
+  <div>
+    <span class="badge" style="background-color: #ef4444; color: white;">GATE 02 &bull; OUTBOUND</span>
+  </div>
+</div>
+
+<div class="grid-2">
+  <!-- Left Column: Exit Webcam & Recognition -->
+  <div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+      <h3 style="font-size: 1.15rem; font-weight: 600;">Outbound Camera Scanner</h3>
+      <div style="display: flex; gap: 0.5rem;">
+        <button id="btnToggleExitCamera" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">Start Camera</button>
+        <button id="btnScanExitPlate" class="btn btn-primary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">Capture & Scan</button>
+      </div>
+    </div>
+
+    <!-- Video / Canvas Viewport -->
+    <div class="camera-wrapper" id="exitCameraViewport">
+      <video id="exitWebcamVideo" class="camera-feed" autoplay playsinline muted style="display: none;"></video>
+      <canvas id="exitCameraCanvas" class="canvas-overlay"></canvas>
+      <div class="camera-scanline"></div>
+      <div id="exitCameraPlaceholder" style="text-align: center; color: var(--text-muted); padding: 1rem;">
+        <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📷</div>
+        <div>Exit camera stream ready</div>
+        <div style="font-size: 0.8rem; margin-top: 0.35rem;">Click "Start Camera" or "Capture & Scan" to read departing vehicle plate</div>
+      </div>
+    </div>
+
+    <!-- Cropped Plate Preview -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.25rem;">
+      <div>
+        <label class="form-label">Detected Outbound Plate</label>
+        <div class="plate-preview-box">
+          <img id="exitPlateCropImg" class="plate-preview-img" style="display: none;" alt="Exit Plate Crop">
+          <span id="exitPlateCropPlaceholder" style="font-size: 0.8rem; color: var(--text-muted);">Awaiting vehicle detection</span>
+        </div>
+      </div>
+      <div>
+        <label class="form-label">Recognition Verification</label>
+        <div style="background-color: #0b1120; border-radius: 8px; border: 1px solid var(--border-color); padding: 0.75rem; min-height: 110px; display: flex; flex-direction: column; justify-content: center;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+            <span style="font-size: 0.82rem; color: var(--text-secondary);">Confidence:</span>
+            <span id="exitConfidenceBadge" class="badge badge-low">Ready</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+            <span style="font-size: 0.82rem; color: var(--text-secondary);">Registration:</span>
+            <span id="exitPlateDisplay" style="font-size: 0.95rem; font-weight: 800; color: #38bdf8;">--</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 0.82rem; color: var(--text-secondary);">State Code:</span>
+            <span id="exitStateCode" style="font-size: 0.85rem; color: var(--text-muted);">--</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Column: Active Session & Billing Breakdown -->
+  <div class="card">
+    <h3 style="font-size: 1.15rem; font-weight: 600; margin-bottom: 1.25rem;">Parking Session & Billing Settlement</h3>
+
+    <div class="form-group">
+      <label class="form-label">Confirm Departing Registration</label>
+      <div style="display: flex; gap: 0.5rem;">
+        <input type="text" id="exitRegInput" class="form-input" placeholder="e.g. DL01AB1234" style="text-transform: uppercase; font-weight: 700; font-size: 1.15rem; letter-spacing: 1px;">
+        <button id="btnLookupSession" class="btn btn-secondary">Find Ticket</button>
+      </div>
+    </div>
+
+    <!-- Active Session Details Box -->
+    <div id="sessionFoundBox" style="display: none; background-color: #0b1120; border-radius: 8px; border: 1px solid var(--border-color); padding: 1.25rem; margin-bottom: 1.25rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; border-bottom: 1px dashed #334155; padding-bottom: 0.5rem;">
+        <span style="font-size: 0.85rem; color: var(--text-secondary);">ACTIVE TICKET: <strong id="billTicketId" style="color: #fff;">--</strong></span>
+        <span class="badge badge-occupied" id="billSlotBadge">Slot --</span>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem; font-size: 0.88rem; margin-bottom: 1rem;">
+        <div>Category: <strong id="billCat" style="color: #38bdf8;">--</strong></div>
+        <div>Parked Time: <span id="billParkedTime">--</span></div>
+        <div>Total Duration: <strong id="billDuration" style="color: #fff;">--</strong></div>
+        <div>Chargeable Time: <span id="billChargeable">--</span></div>
+      </div>
+
+      <!-- Itemized Tariff Breakdown -->
+      <div style="background-color: #1e293b; border-radius: 6px; padding: 0.85rem; border: 1px solid #334155; margin-bottom: 1rem;">
+        <div style="display: flex; justify-content: space-between; font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.35rem;">
+          <span>Complimentary Free Period (60m + 10m Grace):</span>
+          <span style="color: #10b981;">70 Mins (Free)</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.35rem;">
+          <span>Chargeable Billing Blocks:</span>
+          <span id="billBlocks">0 blocks &times; ₹50</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #475569; padding-top: 0.5rem; margin-top: 0.5rem;">
+          <span style="font-weight: 700; font-size: 1.05rem;">Total Fee Payable:</span>
+          <strong id="billTotalFee" style="font-size: 1.4rem; color: #38bdf8;">₹0.00</strong>
+        </div>
+      </div>
+
+      <button id="btnConfirmExit" class="btn btn-primary" style="width: 100%; padding: 0.85rem; font-size: 1.05rem;">
+        Confirm Payment & Open Exit Gate
+      </button>
+    </div>
+
+    <!-- Alert / Feedback Notification -->
+    <div id="exitAlertMsg" style="display: none; padding: 0.85rem; border-radius: 8px; font-size: 0.9rem;"></div>
+  </div>
+</div>
+
+<!-- Exit Clearance Modal -->
+<div id="exitReceiptModal" class="modal-overlay">
+  <div class="modal-content" style="max-width: 440px;">
+    <div class="ticket-card" style="border-top-color: #10b981;">
+      <div class="ticket-header">
+        <div class="ticket-title" style="color: #10b981;">GATE CLEARED</div>
+        <div style="font-size: 0.8rem; color: #64748b; margin-top: 0.2rem;">EXIT RECEIPT & CLEARANCE</div>
+      </div>
+
+      <div class="ticket-row">
+        <span>TICKET ID:</span>
+        <strong id="rcptTicketId">--</strong>
+      </div>
+      <div class="ticket-row">
+        <span>VEHICLE:</span>
+        <strong id="rcptReg" style="color: #0284c7;">--</strong>
+      </div>
+      <div class="ticket-row">
+        <span>RELEASED SLOT:</span>
+        <strong id="rcptSlot" style="color: #10b981;">--</strong>
+      </div>
+      <div class="ticket-row">
+        <span>TOTAL DURATION:</span>
+        <span id="rcptDuration">--</span>
+      </div>
+      <div class="ticket-row bold">
+        <span>AMOUNT SETTLED:</span>
+        <strong id="rcptAmount" style="color: #10b981;">₹0.00</strong>
+      </div>
+      <div class="ticket-row">
+        <span>EXIT TIME:</span>
+        <span id="rcptExitTime">--</span>
+      </div>
+
+      <div style="text-align: center; margin-top: 1.25rem; padding-top: 0.75rem; border-top: 1px dashed #cbd5e1; font-size: 0.78rem; color: #64748b;">
+        Barrier opened. Drive safely!<br>Thank you for using SmartPark AI.
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 0.5rem; margin-top: 1.25rem;">
+      <a href="/parking" class="btn btn-primary" style="flex: 1;">View Slot Grid &rarr;</a>
+      <button class="btn btn-secondary" onclick="closeExitModal()">Done</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let exitVideoStream = null;
+const exitVideoEl = document.getElementById("exitWebcamVideo");
+const exitCanvasEl = document.getElementById("exitCameraCanvas");
+const exitPlaceholderEl = document.getElementById("exitCameraPlaceholder");
+const btnToggleExitCamera = document.getElementById("btnToggleExitCamera");
+const btnScanExitPlate = document.getElementById("btnScanExitPlate");
+const exitRegInput = document.getElementById("exitRegInput");
+const btnLookupSession = document.getElementById("btnLookupSession");
+const btnConfirmExit = document.getElementById("btnConfirmExit");
+const sessionFoundBox = document.getElementById("sessionFoundBox");
+const exitAlertMsg = document.getElementById("exitAlertMsg");
+
+btnToggleExitCamera.addEventListener("click", async () => {
+  if (exitVideoStream) {
+    stopExitCamera();
+  } else {
+    await startExitCamera();
+  }
+});
+
+async function startExitCamera() {
+  try {
+    exitVideoStream = await navigator.mediaDevices.getUserMedia({
+      video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: "environment" }
+    });
+    exitVideoEl.srcObject = exitVideoStream;
+    exitVideoEl.style.display = "block";
+    exitPlaceholderEl.style.display = "none";
+    btnToggleExitCamera.textContent = "Stop Camera";
+    btnToggleExitCamera.classList.replace("btn-secondary", "btn-danger");
+  } catch (err) {
+    console.warn("Exit webcam access failed:", err);
+    showExitAlert("Webcam access unavailable. Using server camera fallback.", "warning");
+  }
+}
+
+function stopExitCamera() {
+  if (exitVideoStream) {
+    exitVideoStream.getTracks().forEach(t => t.stop());
+    exitVideoStream = null;
+  }
+  exitVideoEl.style.display = "none";
+  exitPlaceholderEl.style.display = "block";
+  btnToggleExitCamera.textContent = "Start Camera";
+  btnToggleExitCamera.classList.replace("btn-danger", "btn-secondary");
+  const ctx = exitCanvasEl.getContext("2d");
+  ctx.clearRect(0, 0, exitCanvasEl.width, exitCanvasEl.height);
+}
+
+// Exit ANPR Scan
+btnScanExitPlate.addEventListener("click", async () => {
+  let frameBase64 = null;
+  if (exitVideoStream && exitVideoEl.videoWidth > 0) {
+    exitCanvasEl.width = exitVideoEl.videoWidth;
+    exitCanvasEl.height = exitVideoEl.videoHeight;
+    const ctx = exitCanvasEl.getContext("2d");
+    ctx.drawImage(exitVideoEl, 0, 0, exitCanvasEl.width, exitCanvasEl.height);
+    frameBase64 = exitCanvasEl.toDataURL("image/jpeg", 0.9);
+  }
+
+  btnScanExitPlate.disabled = true;
+  btnScanExitPlate.textContent = "Scanning...";
+
+  try {
+    const res = await fetch("/api/exit/recognize", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ frame: frameBase64 })
+    });
+    const result = await res.json();
+    handleExitANPR(result);
+  } catch (err) {
+    console.error("Exit scan error:", err);
+    showExitAlert("Network communication failure with exit ANPR.", "danger");
+  } finally {
+    btnScanExitPlate.disabled = false;
+    btnScanExitPlate.textContent = "Capture & Scan";
+  }
+});
+
+function handleExitANPR(res) {
+  if (!res.success) {
+    showExitAlert(res.error || "Exit plate scan failed.", "danger");
+    return;
+  }
+
+  if (res.crop_preview) {
+    const img = document.getElementById("exitPlateCropImg");
+    img.src = res.crop_preview;
+    img.style.display = "block";
+    document.getElementById("exitPlateCropPlaceholder").style.display = "none";
+  }
+
+  document.getElementById("exitPlateDisplay").textContent = res.registration_number || "--";
+  document.getElementById("exitStateCode").textContent = res.state_code || "--";
+
+  const tier = res.confidence_tier;
+  const badge = document.getElementById("exitConfidenceBadge");
+  badge.textContent = `${tier} (${Math.round(res.confidence * 100)}%)`;
+  badge.className = `badge badge-${tier.toLowerCase()}`;
+
+  if (res.registration_number) {
+    exitRegInput.value = res.registration_number;
+    lookupSession(res.registration_number);
+  }
+}
+
+// Session Lookup
+btnLookupSession.addEventListener("click", () => {
+  const reg = exitRegInput.value.trim().toUpperCase();
+  if (reg) lookupSession(reg);
+});
+
+async function lookupSession(reg) {
+  try {
+    const res = await fetch(`/api/exit/session/${encodeURIComponent(reg)}`);
+    const data = await res.json();
+    if (!data.success) {
+      sessionFoundBox.style.display = "none";
+      showExitAlert(data.message, "danger");
+      return;
+    }
+
+    const s = data.session;
+    const b = s.bill_preview;
+
+    document.getElementById("billTicketId").textContent = s.ticket_id;
+    document.getElementById("billSlotBadge").textContent = `Slot ${s.slot_number}`;
+    document.getElementById("billCat").textContent = s.parking_category;
+    document.getElementById("billParkedTime").textContent = s.parked_start_time || "Not Parked (Reserved Only)";
+    document.getElementById("billDuration").textContent = b.total_duration_formatted;
+    document.getElementById("billChargeable").textContent = `${b.chargeable_duration_minutes} mins`;
+    document.getElementById("billBlocks").textContent = `${b.billing_blocks} block(s) &times; ₹${b.rate_per_block}`;
+    document.getElementById("billTotalFee").textContent = `₹${b.total_fee.toFixed(2)}`;
+
+    sessionFoundBox.style.display = "block";
+    exitAlertMsg.style.display = "none";
+  } catch (err) {
+    console.error("Lookup error:", err);
+    showExitAlert("Error retrieving active session.", "danger");
+  }
+}
+
+// Confirm Exit
+btnConfirmExit.addEventListener("click", async () => {
+  const reg = exitRegInput.value.trim().toUpperCase();
+  if (!reg) return;
+
+  btnConfirmExit.disabled = true;
+  btnConfirmExit.textContent = "Processing Exit...";
+
+  try {
+    const res = await fetch("/api/exit/confirm", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ registration_number: reg })
+    });
+    const data = await res.json();
+    if (!data.success) {
+      showExitAlert(data.message, "danger");
+    } else {
+      showExitReceipt(data.exit_receipt);
+      sessionFoundBox.style.display = "none";
+      exitRegInput.value = "";
+    }
+  } catch (err) {
+    showExitAlert("Failed to complete exit.", "danger");
+  } finally {
+    btnConfirmExit.disabled = false;
+    btnConfirmExit.textContent = "Confirm Payment & Open Exit Gate";
+  }
+});
+
+function showExitReceipt(rcpt) {
+  const b = rcpt.bill;
+  document.getElementById("rcptTicketId").textContent = rcpt.ticket_id;
+  document.getElementById("rcptReg").textContent = rcpt.registration_number;
+  document.getElementById("rcptSlot").textContent = `Slot ${rcpt.slot_number} (Released to VACANT)`;
+  document.getElementById("rcptDuration").textContent = b.total_duration_formatted;
+  document.getElementById("rcptAmount").textContent = `₹${b.total_fee.toFixed(2)}`;
+  document.getElementById("rcptExitTime").textContent = rcpt.exit_time;
+  document.getElementById("exitReceiptModal").style.display = "flex";
+}
+
+function closeExitModal() {
+  document.getElementById("exitReceiptModal").style.display = "none";
+}
+
+function showExitAlert(msg, type) {
+  exitAlertMsg.textContent = msg;
+  exitAlertMsg.style.display = "block";
+  if (type === "danger") {
+    exitAlertMsg.style.backgroundColor = "rgba(239, 68, 68, 0.15)";
+    exitAlertMsg.style.border = "1px solid #ef4444";
+    exitAlertMsg.style.color = "#fca5a5";
+  } else if (type === "warning") {
+    exitAlertMsg.style.backgroundColor = "rgba(245, 158, 11, 0.15)";
+    exitAlertMsg.style.border = "1px solid #f59e0b";
+    exitAlertMsg.style.color = "#fcd34d";
+  } else {
+    exitAlertMsg.style.backgroundColor = "rgba(16, 185, 129, 0.15)";
+    exitAlertMsg.style.border = "1px solid #10b981";
+    exitAlertMsg.style.color = "#6ee7b7";
+  }
+}
+</script>
+{% endblock %}
+
