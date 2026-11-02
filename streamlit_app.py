@@ -80,7 +80,8 @@ _bg_css = f"""
 # Custom High-Contrast CSS Theme for modern, responsive, and ultra-readable UI
 st.markdown("<style>\n" + _bg_css + """
     /* Semi-transparent frosted smart-city glass cards for content columns */
-    div[data-testid="column"] {
+    div[data-testid="column"]:not(:has([data-testid="stMetric"])),
+    [data-testid="stColumn"]:not(:has([data-testid="stMetric"])) {
         background: rgba(11, 18, 32, 0.84) !important;
         backdrop-filter: blur(14px) !important;
         -webkit-backdrop-filter: blur(14px) !important;
@@ -89,6 +90,112 @@ st.markdown("<style>\n" + _bg_css + """
         border: 1.5px solid rgba(56, 189, 248, 0.35) !important;
         box-shadow: 0 12px 35px rgba(0, 0, 0, 0.55) !important;
         margin-bottom: 16px !important;
+    }
+
+    /* Premium Smart-City KPI Metric Cards */
+    [data-testid="stMetric"],
+    div[data-testid="stMetric"] {
+        background: linear-gradient(145deg, rgba(17, 28, 50, 0.94) 0%, rgba(11, 18, 32, 0.98) 100%) !important;
+        backdrop-filter: blur(14px) !important;
+        -webkit-backdrop-filter: blur(14px) !important;
+        border: 1.5px solid rgba(56, 189, 248, 0.4) !important;
+        border-radius: 14px !important;
+        padding: 18px 20px !important;
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease !important;
+        margin-bottom: 12px !important;
+    }
+    [data-testid="stMetric"]:hover {
+        transform: translateY(-3px) !important;
+        border-color: #22D3EE !important;
+        box-shadow: 0 14px 32px rgba(34, 211, 238, 0.35) !important;
+    }
+    /* Metric Label (Title e.g. Total Stalls, Today's Revenue) */
+    [data-testid="stMetricLabel"],
+    [data-testid="stMetricLabel"] p,
+    [data-testid="stMetricLabel"] span,
+    [data-testid="stMetricLabel"] label,
+    [data-testid="stMetricLabel"] * {
+        color: #38BDF8 !important; /* Electric glowing cyan */
+        font-weight: 800 !important;
+        font-size: 0.92rem !important;
+        letter-spacing: 0.5px !important;
+        text-transform: uppercase !important;
+        text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9) !important;
+    }
+    /* Metric Big Value (Number e.g. 15, ₹0.00) */
+    [data-testid="stMetricValue"],
+    [data-testid="stMetricValue"] div,
+    [data-testid="stMetricValue"] * {
+        color: #FFFFFF !important; /* Brilliant high-contrast pure white */
+        font-weight: 900 !important;
+        font-size: 2.2rem !important;
+        letter-spacing: -0.5px !important;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9) !important;
+    }
+    /* Metric Delta (Status pill e.g. Capacity 100%) */
+    [data-testid="stMetricDelta"] {
+        background: rgba(16, 185, 129, 0.22) !important;
+        border: 1px solid rgba(16, 185, 129, 0.5) !important;
+        padding: 3px 10px !important;
+        border-radius: 12px !important;
+        display: inline-flex !important;
+        width: fit-content !important;
+        margin-top: 4px !important;
+    }
+    [data-testid="stMetricDelta"],
+    [data-testid="stMetricDelta"] svg,
+    [data-testid="stMetricDelta"] * {
+        color: #34D399 !important; /* Glowing emerald green */
+        font-weight: 800 !important;
+        font-size: 0.82rem !important;
+    }
+
+    /* Premium Smart-City Tabs Bar */
+    [data-testid="stTabs"] {
+        background: rgba(11, 18, 32, 0.92) !important;
+        backdrop-filter: blur(14px) !important;
+        -webkit-backdrop-filter: blur(14px) !important;
+        border: 1.5px solid rgba(56, 189, 248, 0.35) !important;
+        border-radius: 14px !important;
+        padding: 12px 16px 20px 16px !important;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6) !important;
+        margin-top: 18px !important;
+    }
+    [data-baseweb="tab-list"] {
+        gap: 8px !important;
+        background: transparent !important;
+        border-bottom: 1.5px solid rgba(56, 189, 248, 0.25) !important;
+        padding-bottom: 6px !important;
+    }
+    button[data-baseweb="tab"] {
+        background: rgba(17, 28, 50, 0.7) !important;
+        border: 1px solid rgba(255, 255, 255, 0.14) !important;
+        border-radius: 8px !important;
+        padding: 8px 18px !important;
+        transition: all 0.2s ease !important;
+    }
+    button[data-baseweb="tab"] * {
+        color: #E2E8F0 !important;
+        font-weight: 700 !important;
+        font-size: 0.94rem !important;
+    }
+    button[data-baseweb="tab"]:hover {
+        background: rgba(30, 58, 138, 0.75) !important;
+        border-color: #22D3EE !important;
+    }
+    button[data-baseweb="tab"]:hover * {
+        color: #FFFFFF !important;
+    }
+    button[data-baseweb="tab"][aria-selected="true"] {
+        background: linear-gradient(135deg, #1E3A8A 0%, #172554 100%) !important;
+        border: 1.5px solid #22D3EE !important;
+        box-shadow: 0 4px 14px rgba(34, 211, 238, 0.35) !important;
+    }
+    button[data-baseweb="tab"][aria-selected="true"] * {
+        color: #22D3EE !important;
+        font-weight: 800 !important;
+        text-shadow: 0 0 10px rgba(34, 211, 238, 0.6) !important;
     }
 
     /* Ultra-Visible High-Contrast Typography Across All Levels */
@@ -1201,8 +1308,12 @@ elif page == "🅿️ Parking Area & Simulation":
 # PAGE 3: GUARD COMMAND CENTER
 # ==============================================================================
 elif page == "🛡️ Guard Command Center":
-    st.title("🛡️ Guard Station Command Center")
-    st.write("Real-time facility security monitoring, incident management, tariff controls, and session audit.")
+    st.markdown("""
+    <div style="background: linear-gradient(135deg, rgba(17, 28, 50, 0.94) 0%, rgba(11, 18, 32, 0.98) 100%); border: 1.5px solid rgba(56, 189, 248, 0.35); border-left: 5px solid #22D3EE; border-radius: 12px; padding: 16px 22px; margin-bottom: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); backdrop-filter: blur(12px);">
+        <h1 style="color:#FFFFFF !important; margin:0; font-size:1.85rem; font-weight:900; letter-spacing:-0.5px; text-shadow:0 2px 10px rgba(0,0,0,0.85);">🛡️ Guard Station Command Center</h1>
+        <p style="color:#CBD5E1 !important; margin:6px 0 0 0; font-size:0.94rem; font-weight:600;">Real-time facility security monitoring, incident management, tariff controls, and session audit.</p>
+    </div>
+    """, unsafe_allow_html=True)
 
     stats = get_guard_dashboard_stats()
 
