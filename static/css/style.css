@@ -1,28 +1,35 @@
 /* ==============================================================================
-   SmartPark AI - Modern Smart-City & AI-Inspired Design System
+   SmartPark AI - Modern Smart-City & 2D Top-Down Parking Design System
    Color Palette:
    - Deep Midnight Navy: #0B1220
-   - Dark Blue Surface:  #111C32
-   - Electric Cyan:      #22D3EE
-   - Bright Blue:        #3B82F6
-   - Emerald Green:      #10B981
-   - Amber Accent:       #F59E0B
-   - Coral Red:          #F43F5E
-   - Slate Text Muted:   #64748B
-   - Light High-Contrast: #F8FAFC
+   - Navy Blue:          #14233B
+   - Smart Cyan:         #22D3EE
+   - Electric Blue:      #3B82F6
+   - Light Background:   #F3F6FA
+   - Parking Surface:    #E8EDF3
+   - White Cards:        #FFFFFF
+   - Vacant Green:       #10B981
+   - Reserved Amber:     #F59E0B
+   - Occupied Coral Red: #F43F5E
+   - Blocked Gray:       #94A3B8
+   - Primary Text:       #172033
+   - Secondary Text:     #64748B
    ============================================================================== */
 
 :root {
-  --bg-deep: #0B1220;
-  --bg-surface: #111C32;
-  --bg-card: #16243F;
-  --bg-card-hover: #1E3154;
-  --bg-input: #0E1729;
+  --bg-deep: #F3F6FA;
+  --bg-surface: #FFFFFF;
+  --bg-card: #FFFFFF;
+  --bg-card-hover: #F8FAFC;
+  --bg-input: #FFFFFF;
+  --bg-parking: #E8EDF3;
+  --bg-navy-dark: #0B1220;
+  --bg-navy-blue: #14233B;
 
-  --text-primary: #F8FAFC;
-  --text-secondary: #94A3B8;
-  --text-muted: #64748B;
-  --text-inverse: #0B1220;
+  --text-primary: #172033;
+  --text-secondary: #64748B;
+  --text-muted: #94A3B8;
+  --text-inverse: #FFFFFF;
 
   --brand-cyan: #22D3EE;
   --brand-cyan-glow: rgba(34, 211, 238, 0.25);
@@ -31,22 +38,23 @@
 
   /* Status Colors */
   --status-vacant: #10B981;
-  --status-vacant-bg: rgba(16, 185, 129, 0.15);
-  --status-vacant-border: rgba(16, 185, 129, 0.35);
+  --status-vacant-bg: rgba(16, 185, 129, 0.12);
+  --status-vacant-border: #10B981;
 
   --status-reserved: #F59E0B;
-  --status-reserved-bg: rgba(245, 158, 11, 0.15);
-  --status-reserved-border: rgba(245, 158, 11, 0.35);
+  --status-reserved-bg: rgba(245, 158, 11, 0.12);
+  --status-reserved-border: #F59E0B;
 
   --status-occupied: #F43F5E;
-  --status-occupied-bg: rgba(244, 63, 94, 0.15);
-  --status-occupied-border: rgba(244, 63, 94, 0.35);
+  --status-occupied-bg: rgba(244, 63, 94, 0.12);
+  --status-occupied-border: #F43F5E;
 
-  --status-blocked: #64748B;
-  --status-blocked-bg: rgba(100, 116, 139, 0.2);
-  --status-blocked-border: rgba(100, 116, 139, 0.4);
+  --status-blocked: #94A3B8;
+  --status-blocked-bg: rgba(148, 163, 184, 0.15);
+  --status-blocked-border: #94A3B8;
 
-  --border-subtle: #243552;
+  --border-subtle: #E2E8F0;
+  --border-medium: #CBD5E1;
   --border-focus: #22D3EE;
 
   --radius-xs: 4px;
@@ -55,10 +63,11 @@
   --radius-lg: 16px;
   --radius-pill: 9999px;
 
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.25);
-  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.35);
-  --shadow-lg: 0 10px 28px rgba(0, 0, 0, 0.45);
-  --shadow-cyan: 0 0 20px rgba(34, 211, 238, 0.3);
+  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.05);
+  --shadow-md: 0 4px 16px rgba(15, 23, 42, 0.07);
+  --shadow-lg: 0 10px 28px rgba(15, 23, 42, 0.1);
+  --shadow-stall: 0 4px 14px rgba(15, 23, 42, 0.08), 0 1px 3px rgba(15, 23, 42, 0.04);
+  --shadow-stall-hover: 0 14px 28px rgba(15, 23, 42, 0.16), 0 3px 8px rgba(15, 23, 42, 0.08);
 
   --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
@@ -84,6 +93,9 @@ body {
   display: flex;
   flex-direction: column;
   -webkit-font-smoothing: antialiased;
+  background-image: radial-gradient(#CBD5E1 0.8px, transparent 0.8px), radial-gradient(#CBD5E1 0.8px, #F3F6FA 0.8px);
+  background-size: 32px 32px;
+  background-position: 0 0, 16px 16px;
 }
 
 /* ==============================================================================
@@ -250,23 +262,25 @@ body {
   border-radius: var(--radius-md);
   padding: 1.5rem;
   box-shadow: var(--shadow-sm);
-  transition: transform var(--transition-fast), border-color var(--transition-fast);
+  color: var(--text-primary);
+  transition: transform var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .card:hover {
-  border-color: rgba(34, 211, 238, 0.3);
+  border-color: rgba(34, 211, 238, 0.4);
+  box-shadow: var(--shadow-md);
 }
 
 .card-title {
   font-size: 1.15rem;
-  font-weight: 700;
+  font-weight: 800;
   color: var(--text-primary);
   margin-bottom: 0.5rem;
 }
 
 /* Interactive Stat KPI Cards */
 .stat-card {
-  background: linear-gradient(145deg, #16243F 0%, #111C32 100%);
+  background: #FFFFFF;
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   padding: 1.25rem;
@@ -274,17 +288,19 @@ body {
   position: relative;
   overflow: hidden;
   transition: all var(--transition-fast);
+  box-shadow: var(--shadow-sm);
 }
 
 .stat-card:hover {
   transform: translateY(-3px);
   border-color: var(--brand-cyan);
-  box-shadow: var(--shadow-cyan);
+  box-shadow: 0 6px 18px rgba(34, 211, 238, 0.2);
 }
 
 .stat-card.active-filter {
   border-color: var(--brand-cyan);
-  box-shadow: 0 0 15px rgba(34, 211, 238, 0.4);
+  box-shadow: 0 0 16px rgba(34, 211, 238, 0.35);
+  background-color: #F8FAFC;
 }
 
 .stat-header {
@@ -303,13 +319,14 @@ body {
 }
 
 .stat-icon {
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.1rem;
+  font-size: 1.15rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
 }
 
 .stat-value {
@@ -353,25 +370,33 @@ body {
   background: linear-gradient(135deg, #0284C7, #38BDF8);
   color: #0B1220 !important;
   border: none;
-  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.25);
 }
 
 .btn-primary:hover {
   background: linear-gradient(135deg, #0369A1, #0284C7);
   color: #FFFFFF !important;
-  box-shadow: 0 6px 18px rgba(56, 189, 248, 0.45);
+  box-shadow: 0 6px 18px rgba(56, 189, 248, 0.35);
 }
 
 .btn-secondary {
-  background-color: #16243F;
+  background-color: #FFFFFF;
   color: var(--text-primary);
-  border: 1px solid var(--border-subtle);
+  border: 1.5px solid var(--border-medium);
+  box-shadow: var(--shadow-sm);
 }
 
 .btn-secondary:hover {
-  background-color: var(--bg-card-hover);
+  background-color: #F8FAFC;
   border-color: var(--brand-cyan);
   color: var(--brand-cyan);
+}
+
+.btn-secondary.active, .btn-secondary.active-nav {
+  background-color: var(--bg-navy-blue);
+  color: #FFFFFF !important;
+  border-color: var(--bg-navy-blue);
+  box-shadow: 0 2px 8px rgba(20, 35, 59, 0.25);
 }
 
 .btn-success {
@@ -381,7 +406,7 @@ body {
 
 .btn-success:hover {
   background-color: #059669;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
 
 .btn-warning {
@@ -401,7 +426,7 @@ body {
 
 .btn-danger:hover {
   background-color: #E11D48;
-  box-shadow: 0 4px 12px rgba(244, 63, 94, 0.35);
+  box-shadow: 0 4px 12px rgba(244, 63, 94, 0.3);
 }
 
 .btn-block {
@@ -431,141 +456,343 @@ body {
 
 .badge-vacant {
   background-color: var(--status-vacant-bg);
-  color: #34D399;
+  color: #059669;
   border: 1px solid var(--status-vacant-border);
 }
 
 .badge-reserved {
   background-color: var(--status-reserved-bg);
-  color: #FBBF24;
+  color: #D97706;
   border: 1px solid var(--status-reserved-border);
 }
 
 .badge-occupied {
   background-color: var(--status-occupied-bg);
-  color: #FB7185;
+  color: #E11D48;
   border: 1px solid var(--status-occupied-border);
 }
 
 .badge-blocked {
   background-color: var(--status-blocked-bg);
-  color: #94A3B8;
+  color: #475569;
   border: 1px solid var(--status-blocked-border);
 }
 
 .badge-new {
-  background-color: rgba(245, 158, 11, 0.2);
-  color: #F59E0B;
+  background-color: rgba(245, 158, 11, 0.15);
+  color: #D97706;
   border: 1px solid #F59E0B;
 }
 
 .badge-inprogress {
-  background-color: rgba(59, 130, 246, 0.2);
-  color: #38BDF8;
-  border: 1px solid #38BDF8;
+  background-color: rgba(59, 130, 246, 0.15);
+  color: #2563EB;
+  border: 1px solid #3B82F6;
 }
 
 .badge-resolved {
-  background-color: rgba(16, 185, 129, 0.2);
-  color: #10B981;
+  background-color: rgba(16, 185, 129, 0.15);
+  color: #059669;
   border: 1px solid #10B981;
 }
 
 /* ==============================================================================
-   INTERACTIVE PARKING MAP & SPATIAL STALLS
+   REALISTIC 2D TOP-DOWN PARKING LOT WITH SUBTLE 3D DEPTH
    ============================================================================== */
-.parking-map-container {
-  background: #0B1220;
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-  padding: 1.5rem;
-  box-shadow: var(--shadow-md);
+.parking-map-container, .parking-lot-floorplan {
+  background-color: var(--bg-parking);
+  border: 2px solid var(--border-medium);
+  border-radius: var(--radius-lg);
+  padding: 1.75rem;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+  position: relative;
+  overflow: hidden;
+  background-image: 
+    linear-gradient(rgba(203, 213, 225, 0.35) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(203, 213, 225, 0.35) 1px, transparent 1px);
+  background-size: 26px 26px;
 }
 
-.lane-indicator {
+/* Facility Gate Portals (Entrance & Exit) */
+.facility-gate-portal {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.85rem 1.35rem;
+  background: linear-gradient(135deg, #14233B 0%, #0B1220 100%);
+  border-radius: var(--radius-md);
+  color: #FFFFFF;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 14px rgba(11, 18, 32, 0.2);
+  border: 1px solid #1E3A5F;
+  position: relative;
+}
+
+.facility-gate-portal.exit-gate {
+  margin-top: 1.5rem;
+  margin-bottom: 0;
+  background: linear-gradient(135deg, #0B1220 0%, #14233B 100%);
+  border-color: #10B981;
+}
+
+.gate-barrier-arm {
+  display: inline-block;
+  width: 95px;
+  height: 9px;
+  border-radius: 4px;
+  background: repeating-linear-gradient(45deg, #EF4444, #EF4444 10px, #FFFFFF 10px, #FFFFFF 20px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.35);
+  margin-right: 0.6rem;
+  vertical-align: middle;
+}
+
+/* Driving Asphalt Roadway with Painted Traffic Markings */
+.parking-roadway, .lane-indicator {
+  background: #1E293B;
+  border-radius: 8px;
+  min-height: 52px;
+  margin: 1.75rem 0;
   display: flex;
   align-items: center;
-  justify-content: center;
-  background: repeating-linear-gradient(90deg, #16243F, #16243F 20px, #243552 20px, #243552 40px);
-  padding: 0.5rem;
-  margin: 1.25rem 0;
-  border-radius: var(--radius-xs);
-  color: var(--brand-cyan);
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-}
-
-.slots-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 1rem;
-}
-
-.slot-item {
-  background-color: var(--bg-surface);
-  border: 2px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-  padding: 1.1rem;
-  cursor: pointer;
+  justify-content: space-between;
+  padding: 0 1.5rem;
   position: relative;
-  transition: all var(--transition-fast);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  color: #F8FAFC;
+}
+
+.roadway-divider {
+  position: absolute;
+  left: 6%;
+  right: 6%;
+  top: 50%;
+  height: 2px;
+  background: repeating-linear-gradient(90deg, #FBBF24, #FBBF24 24px, transparent 24px, transparent 48px);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.roadway-label {
+  position: relative;
+  z-index: 2;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: #F8FAFC;
+  text-transform: uppercase;
+  background: rgba(15, 23, 42, 0.85);
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.zebra-crossing {
+  display: flex;
+  gap: 5px;
+  height: 38px;
+  align-items: center;
+  z-index: 2;
+}
+
+.zebra-bar {
+  width: 7px;
+  height: 100%;
+  background: #FFFFFF;
+  border-radius: 1px;
+  opacity: 0.85;
+}
+
+/* Row Headers */
+.row-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.85rem;
+  padding: 0.3rem 0.5rem;
+}
+
+.row-title {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #172033;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Organized Bays Grid */
+.slots-grid, .stalls-row-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(185px, 1fr));
+  gap: 1.25rem;
+}
+
+/* 2D Parking Stall with Subtle 3D Depth */
+.slot-item, .parking-bay {
+  background: #FFFFFF;
+  border-top: 3.5px solid #FFFFFF;
+  border-left: 3.5px solid #FFFFFF;
+  border-right: 3.5px solid #FFFFFF;
+  border-bottom: 2.5px dashed #CBD5E1;
+  border-radius: 10px;
+  min-height: 245px;
+  padding: 0.85rem 0.75rem;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  min-height: 125px;
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08), 0 1px 3px rgba(15, 23, 42, 0.04);
 }
 
-.slot-item:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-md);
+.slot-item:hover, .parking-bay:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.16), 0 3px 8px rgba(15, 23, 42, 0.08);
+  z-index: 10;
 }
 
-.slot-item.status-vacant {
-  border-color: var(--status-vacant);
-  background: linear-gradient(180deg, rgba(16, 185, 129, 0.08) 0%, var(--bg-surface) 100%);
+/* 3D Wheel Stop Curb Bar at Stall Head */
+.wheel-stop-curb {
+  width: 65%;
+  height: 8px;
+  background: linear-gradient(180deg, #E2E8F0 0%, #94A3B8 100%);
+  border-radius: 4px;
+  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.22);
+  margin: 2px auto 8px auto;
 }
 
-.slot-item.status-reserved {
-  border-color: var(--status-reserved);
-  background: linear-gradient(180deg, rgba(245, 158, 11, 0.08) 0%, var(--bg-surface) 100%);
+/* Stall Status Coloring */
+.slot-item.status-vacant, .parking-bay.status-vacant {
+  background: linear-gradient(180deg, rgba(16, 185, 129, 0.07) 0%, #FFFFFF 100%);
+  border-color: rgba(16, 185, 129, 0.4);
 }
 
-.slot-item.status-occupied {
-  border-color: var(--status-occupied);
-  background: linear-gradient(180deg, rgba(244, 63, 94, 0.08) 0%, var(--bg-surface) 100%);
+.slot-item.status-vacant:hover, .parking-bay.status-vacant:hover {
+  border-color: #10B981;
 }
 
-.slot-item.status-blocked {
-  border-color: var(--status-blocked);
-  background: linear-gradient(180deg, rgba(100, 116, 139, 0.1) 0%, var(--bg-surface) 100%);
+.slot-item.status-reserved, .parking-bay.status-reserved {
+  background: linear-gradient(180deg, rgba(245, 158, 11, 0.08) 0%, #FFFFFF 100%);
+  border-color: rgba(245, 158, 11, 0.5);
 }
 
-.slot-item-header {
+.slot-item.status-reserved:hover, .parking-bay.status-reserved:hover {
+  border-color: #F59E0B;
+}
+
+.slot-item.status-occupied, .parking-bay.status-occupied {
+  background: linear-gradient(180deg, rgba(244, 63, 94, 0.07) 0%, #FFFFFF 100%);
+  border-color: rgba(244, 63, 94, 0.4);
+}
+
+.slot-item.status-occupied:hover, .parking-bay.status-occupied:hover {
+  border-color: #F43F5E;
+}
+
+.slot-item.status-blocked, .parking-bay.status-blocked {
+  background: linear-gradient(180deg, rgba(148, 163, 184, 0.12) 0%, #FFFFFF 100%);
+  border-color: #94A3B8;
+}
+
+.slot-item-header, .stall-head-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 0.35rem;
 }
 
-.slot-code {
-  font-size: 1.25rem;
+.slot-code, .stall-identifier {
+  font-size: 1.15rem;
   font-weight: 800;
-  color: var(--text-primary);
+  color: #172033;
   letter-spacing: 0.5px;
 }
 
-.slot-plate {
-  margin-top: 0.6rem;
-  font-size: 0.9rem;
-  font-weight: 700;
+/* Floor Canvas & Stencil Artwork */
+.bay-floor-canvas {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  min-height: 140px;
 }
 
-.plate-tag {
+.bay-stencil-bg {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 0.22;
+  pointer-events: none;
+}
+
+/* 3D Top-Down Vehicle SVG */
+.topdown-car-svg {
+  filter: drop-shadow(0 10px 14px rgba(15, 23, 42, 0.38));
+  transition: transform 0.2s ease;
+}
+
+.parking-bay:hover .topdown-car-svg {
+  transform: scale(1.03);
+}
+
+/* Plate Tag in Stall */
+.plate-tag, .stall-plate-pill {
   background-color: #0284C7;
   color: #FFFFFF;
   padding: 0.25rem 0.65rem;
   border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.75px;
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.3);
+  margin-top: 4px;
+  display: inline-block;
+}
+
+/* Floating Hover Tooltip */
+.stall-tooltip-card {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%) translateY(6px);
+  background: #0B1220;
+  color: #FFFFFF;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+  box-shadow: 0 8px 24px rgba(11, 18, 32, 0.35);
+  border: 1px solid #22D3EE;
+  z-index: 100;
+}
+
+.stall-tooltip-card::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 6px;
+  border-style: solid;
+  border-color: #0B1220 transparent transparent transparent;
+}
+
+.slot-item:hover .stall-tooltip-card, .parking-bay:hover .stall-tooltip-card {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
   font-family: var(--font-mono);
   font-size: 0.85rem;
   letter-spacing: 0.5px;
@@ -642,7 +869,7 @@ body {
 
 .alert-desc {
   font-size: 0.92rem;
-  color: #E2E8F0;
+  color: var(--text-primary);
   margin-bottom: 0.85rem;
   line-height: 1.4;
 }
@@ -666,27 +893,28 @@ body {
 .form-label {
   display: block;
   font-size: 0.88rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-secondary);
   margin-bottom: 0.45rem;
 }
 
 .form-input {
   width: 100%;
-  background-color: var(--bg-input);
-  border: 1px solid var(--border-subtle);
+  background-color: #FFFFFF;
+  border: 1.5px solid var(--border-medium);
   border-radius: var(--radius-sm);
   padding: 0.75rem 1rem;
   color: var(--text-primary);
   font-family: inherit;
   font-size: 0.95rem;
+  font-weight: 600;
   transition: all var(--transition-fast);
 }
 
 .form-input:focus {
   outline: none;
   border-color: var(--brand-cyan);
-  box-shadow: 0 0 10px rgba(34, 211, 238, 0.25);
+  box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.25);
 }
 
 /* ==============================================================================
@@ -695,7 +923,7 @@ body {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background-color: rgba(11, 18, 32, 0.8);
+  background-color: rgba(11, 18, 32, 0.75);
   backdrop-filter: blur(8px);
   display: none;
   align-items: center;
@@ -709,14 +937,15 @@ body {
 }
 
 .modal-content {
-  background-color: var(--bg-surface);
+  background-color: #FFFFFF;
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
   width: 100%;
-  max-width: 540px;
-  box-shadow: var(--shadow-lg);
+  max-width: 560px;
+  box-shadow: 0 20px 40px rgba(11, 18, 32, 0.25);
   overflow: hidden;
   animation: modal-pop 0.2s ease-out;
+  color: var(--text-primary);
 }
 
 @keyframes modal-pop {
@@ -730,10 +959,12 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  background-color: #F8FAFC;
 }
 
 .modal-body {
   padding: 1.5rem;
+  background-color: #FFFFFF;
 }
 
 .modal-footer {
@@ -742,7 +973,7 @@ body {
   display: flex;
   justify-content: flex-end;
   gap: 0.75rem;
-  background-color: rgba(11, 18, 32, 0.4);
+  background-color: #F8FAFC;
 }
 
 /* ==============================================================================

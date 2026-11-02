@@ -102,7 +102,49 @@ st.markdown("""
         color: #0F172A !important;
     }
 
-    /* Slot Card */
+    /* Slot Card & 2D Top-Down Parking Bays with Subtle 3D Depth */
+    .st-parking-bay {
+        background: #111C32;
+        border-top: 3.5px solid #FFFFFF;
+        border-left: 3.5px solid #FFFFFF;
+        border-right: 3.5px solid #FFFFFF;
+        border-bottom: 2.5px dashed #475569;
+        border-radius: 10px;
+        min-height: 255px;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        margin-bottom: 14px;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .st-parking-bay:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 26px rgba(0, 0, 0, 0.5);
+    }
+    .st-wheel-stop {
+        width: 62%;
+        height: 7px;
+        background: linear-gradient(180deg, #E2E8F0 0%, #94A3B8 100%);
+        border-radius: 3px;
+        box-shadow: 0 3px 5px rgba(0,0,0,0.3);
+        margin: 0 auto 8px auto;
+    }
+    .st-roadway {
+        background: #0B1220;
+        border-radius: 8px;
+        height: 48px;
+        margin: 18px 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 18px;
+        position: relative;
+        box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.5);
+        color: #F8FAFC;
+        border: 1px dashed #38BDF8;
+    }
     .slot-card {
         border-radius: 10px;
         padding: 14px;
@@ -122,6 +164,54 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
+
+def get_st_topdown_vehicle_svg(slot_id: int) -> str:
+    car_paints = [
+        ("#1D4ED8", "#3B82F6"),
+        ("#334155", "#64748B"),
+        ("#BE123C", "#E11D48"),
+        ("#047857", "#10B981"),
+        ("#0F172A", "#1E293B"),
+        ("#C2410C", "#F97316"),
+    ]
+    p1, p2 = car_paints[abs(slot_id * 7) % len(car_paints)]
+    uid = f"st-car-{slot_id}"
+    return f"""
+    <svg viewBox="0 0 110 200" width="80" height="140" style="filter: drop-shadow(0 8px 12px rgba(0,0,0,0.55));">
+      <defs>
+        <linearGradient id="{uid}" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="{p1}" />
+          <stop offset="100%" stop-color="{p2}" />
+        </linearGradient>
+      </defs>
+      <rect x="12" y="32" width="10" height="26" rx="4" fill="#0B1220" />
+      <rect x="88" y="32" width="10" height="26" rx="4" fill="#0B1220" />
+      <rect x="12" y="142" width="10" height="26" rx="4" fill="#0B1220" />
+      <rect x="88" y="142" width="10" height="26" rx="4" fill="#0B1220" />
+      <path d="M 17 64 L 6 70 L 6 78 L 18 75 Z" fill="{p1}" />
+      <path d="M 93 64 L 104 70 L 104 78 L 92 75 Z" fill="{p1}" />
+      <path d="M 22 40 C 22 18, 36 10, 55 10 C 74 10, 88 18, 88 40 L 90 160 C 90 182, 76 190, 55 190 C 34 190, 20 182, 20 160 Z" fill="url(#{uid})" />
+      <polygon points="24,16 34,13 32,22 22,21" fill="#FEF08A" opacity="0.9" />
+      <polygon points="86,16 76,13 78,22 88,21" fill="#FEF08A" opacity="0.9" />
+      <path d="M 26 60 C 34 52, 76 52, 84 60 L 78 88 C 72 85, 38 85, 32 88 Z" fill="#0B1220" />
+      <rect x="34" y="94" width="42" height="38" rx="4" fill="#0B1220" stroke="rgba(255,255,255,0.2)" stroke-width="1.5" />
+      <path d="M 32 138 C 38 141, 72 141, 78 138 L 82 160 C 74 163, 36 163, 28 160 Z" fill="#0B1220" />
+      <rect x="23" y="178" width="14" height="4.5" rx="1.5" fill="#EF4444" />
+      <rect x="73" y="178" width="14" height="4.5" rx="1.5" fill="#EF4444" />
+    </svg>
+    """
+
+def get_st_cone_svg() -> str:
+    return """
+    <svg viewBox="0 0 80 80" width="56" height="56" style="filter: drop-shadow(0 6px 8px rgba(0,0,0,0.3));">
+      <rect x="12" y="12" width="56" height="56" rx="8" fill="#C2410C"/>
+      <circle cx="40" cy="40" r="23" fill="#EA580C"/>
+      <circle cx="40" cy="40" r="17" fill="#FFFFFF"/>
+      <circle cx="40" cy="40" r="12" fill="#EA580C"/>
+      <circle cx="40" cy="40" r="7" fill="#FFFFFF"/>
+      <circle cx="40" cy="40" r="3" fill="#9A3412"/>
+    </svg>
+    """
 
 # Sidebar Navigation
 st.sidebar.title("🅿️ SmartPark AI")
@@ -372,48 +462,155 @@ elif page == "🅿️ Parking Area & Simulation":
     st.write("")
     slots = get_all_slots()
 
+    # Filter & Search Control Bar
+    f_col1, f_col2 = st.columns([3, 2])
+    with f_col1:
+        st_filter = st.selectbox(
+            "Filter Facility Layout",
+            ["All Slots", "🟢 Vacant Only", "🟡 Reserved Only", "🔴 Occupied Only", "⚪ Blocked Only", "♿ Accessible (Row A)", "⚡ EV Fast Charging (Row B)", "🚗 Normal Parking (Row C)"]
+        )
+    with f_col2:
+        st_search = st.text_input("Search Slot ID or Registration", placeholder="e.g. D-01, CG04JD4719...").strip().upper()
+
+    # Inbound Gate 01 Entrance Portal
+    st.markdown("""
+    <div style="background: linear-gradient(135deg, #14233B 0%, #0B1220 100%); padding: 10px 16px; border-radius: 8px; border: 1px solid #1E3A5F; display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <div style="display:flex; align-items:center; gap:10px;">
+            <span style="display:inline-block; width:70px; height:8px; border-radius:3px; background:repeating-linear-gradient(45deg, #EF4444, #EF4444 8px, #FFFFFF 8px, #FFFFFF 16px);"></span>
+            <span style="color:#38BDF8; font-weight:800; font-size:0.92rem;">GATE 01 &bull; INBOUND ARRIVAL ENTRANCE & ANPR SCANNER</span>
+        </div>
+        <span style="color:#10B981; font-weight:700; font-size:0.8rem; background:rgba(16,185,129,0.15); padding:2px 8px; border-radius:12px;">● BARRIER READY</span>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Filter logic
+    filtered_slots = slots
+    if st_filter == "🟢 Vacant Only":
+        filtered_slots = [s for s in filtered_slots if s["status"] == "VACANT"]
+    elif st_filter == "🟡 Reserved Only":
+        filtered_slots = [s for s in filtered_slots if s["status"] == "RESERVED"]
+    elif st_filter == "🔴 Occupied Only":
+        filtered_slots = [s for s in filtered_slots if s["status"] == "OCCUPIED"]
+    elif st_filter == "⚪ Blocked Only":
+        filtered_slots = [s for s in filtered_slots if s["status"] == "BLOCKED"]
+    elif st_filter == "♿ Accessible (Row A)":
+        filtered_slots = [s for s in filtered_slots if s["category"] == "Disabled Parking"]
+    elif st_filter == "⚡ EV Fast Charging (Row B)":
+        filtered_slots = [s for s in filtered_slots if s["category"] == "EV Charging Parking"]
+    elif st_filter == "🚗 Normal Parking (Row C)":
+        filtered_slots = [s for s in filtered_slots if s["category"] == "Normal Parking"]
+
+    if st_search:
+        filtered_slots = [
+            s for s in filtered_slots if
+            st_search in s["slot_number"].upper() or
+            (s.get("registration_number") and st_search in s["registration_number"].upper())
+        ]
+
     # Category Grids
-    for cat_name, cat_icon, cat_desc in [
-        ("Disabled Parking", "♿", "Dedicated Accessible Stalls (Near Elevator / Barrier-Free)"),
-        ("EV Charging Parking", "⚡", "Dedicated 22kW AC Fast Charging Stalls"),
-        ("Normal Parking", "🚗", "Standard Vehicle Stalls")
-    ]:
-        cat_slots = [s for s in slots if s["category"] == cat_name]
-        vacant_count = sum(1 for s in cat_slots if s["status"] == "VACANT")
-        st.subheader(f"{cat_icon} {cat_name} &mdash; {vacant_count}/{len(cat_slots)} Vacant")
-        st.caption(cat_desc)
+    categories = [
+        ("Disabled Parking", "♿", "ROW A &mdash; Priority Accessible Spaces (Extra-wide bays, direct elevator proximity)"),
+        ("EV Charging Parking", "⚡", "ROW B &mdash; Dedicated Fast-Charging Spaces (Level 2 50kW DC Fast Stations)"),
+        ("Normal Parking", "🚗", "ROW C &mdash; Standard Vehicle Spaces (Sedans, SUVs, Commercial Transport)")
+    ]
 
-        grid_cols = st.columns(len(cat_slots) if len(cat_slots) <= 5 else 5)
+    for cat_idx, (cat_name, cat_icon, cat_desc) in enumerate(categories):
+        cat_slots = [s for s in filtered_slots if s["category"] == cat_name]
+        all_cat_slots = [s for s in slots if s["category"] == cat_name]
+        vacant_count = sum(1 for s in all_cat_slots if s["status"] == "VACANT")
 
-        for idx, s in enumerate(cat_slots):
-            col_target = grid_cols[idx % len(grid_cols)]
-            with col_target:
-                stat_lower = s["status"].lower()
-                border_color = (
-                    "#10B981" if s["status"] == "VACANT"
-                    else ("#F59E0B" if s["status"] == "RESERVED"
-                    else ("#F43F5E" if s["status"] == "OCCUPIED"
-                    else "#64748B"))
-                )
+        if cat_slots:
+            st.markdown(f"#### {cat_icon} {cat_desc}")
+            st.caption(f"{vacant_count} of {len(all_cat_slots)} available for immediate allocation")
 
-                if s["registration_number"]:
-                    veh_info = f"<span class='plate-badge'>{s['registration_number']}</span>"
-                elif s["status"] == "VACANT":
-                    veh_info = "<span style='color:#94a3b8;'>Available</span>"
-                else:
-                    veh_info = "<span style='color:#F43F5E;'>⚠️ Obstructed</span>"
+            grid_cols = st.columns(len(cat_slots) if len(cat_slots) <= 5 else 5)
 
-                st.markdown(f"""
-                <div class="slot-card" style="border: 2px solid {border_color};">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <span style="font-size:1.2rem; font-weight:800; color:#ffffff;">{cat_icon} {s['slot_number']}</span>
-                        <span class="status-badge-{stat_lower}">{s['status']}</span>
+            for idx, s in enumerate(cat_slots):
+                col_target = grid_cols[idx % len(grid_cols)]
+                with col_target:
+                    stat_lower = s["status"].lower()
+                    border_color = (
+                        "#10B981" if s["status"] == "VACANT"
+                        else ("#F59E0B" if s["status"] == "RESERVED"
+                        else ("#F43F5E" if s["status"] == "OCCUPIED"
+                        else "#64748B"))
+                    )
+
+                    # Top-down visual element
+                    if s["status"] == "OCCUPIED":
+                        veh_visual = get_st_topdown_vehicle_svg(s["id"])
+                        mid_content = f"""
+                        <div style="display:flex; flex-direction:column; align-items:center; margin: 4px 0;">
+                            {veh_visual}
+                            <span class="plate-badge" style="margin-top:4px;">{s['registration_number'] or 'PARKED'}</span>
+                        </div>
+                        """
+                    elif s["status"] == "RESERVED":
+                        mid_content = f"""
+                        <div style="text-align:center; padding: 24px 0;">
+                            <div style="font-size:2rem; margin-bottom:4px;">🟡</div>
+                            <div style="font-size:0.75rem; font-weight:800; color:#FBBF24; text-transform:uppercase;">IN TRANSIT</div>
+                            {f'<span class="plate-badge" style="background:#D97706; margin-top:4px;">{s["registration_number"]}</span>' if s.get("registration_number") else ''}
+                        </div>
+                        """
+                    elif s["status"] == "BLOCKED":
+                        mid_content = f"""
+                        <div style="text-align:center; padding: 18px 0;">
+                            {get_st_cone_svg()}
+                            <div style="font-size:0.75rem; font-weight:800; color:#F43F5E; margin-top:4px;">OBSTRUCTED</div>
+                        </div>
+                        """
+                    else:
+                        # VACANT: clean stall floor with checkmark, no vehicle
+                        mid_content = f"""
+                        <div style="text-align:center; padding: 28px 0;">
+                            <div style="width:36px; height:36px; border-radius:50%; background:rgba(16,185,129,0.15); display:inline-flex; align-items:center; justify-content:center; color:#10B981; font-size:1.1rem; font-weight:900; margin-bottom:4px;">✓</div>
+                            <div style="font-size:0.8rem; font-weight:800; color:#10B981;">AVAILABLE</div>
+                            <div style="font-size:0.7rem; color:#94A3B8;">Ready to park</div>
+                        </div>
+                        """
+
+                    st.markdown(f"""
+                    <div class="st-parking-bay" style="border-top-color:{border_color}; border-left-color:{border_color}; border-right-color:{border_color};">
+                        <div class="st-wheel-stop"></div>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span style="font-size:1.15rem; font-weight:800; color:#FFFFFF;">{cat_icon} {s['slot_number']}</span>
+                            <span class="status-badge-{stat_lower}">{s['status']}</span>
+                        </div>
+                        {mid_content}
+                        <div style="font-size:0.72rem; color:#94A3B8; border-top:1px dashed #334155; padding-top:4px; display:flex; justify-content:space-between;">
+                            <span>{s['category'].split(' ')[0]}</span>
+                            <span style="color:#22D3EE;">Active IoT</span>
+                        </div>
                     </div>
-                    <div style="margin-top:10px; font-size:0.9rem; color:#e2e8f0;">
-                        Vehicle: {veh_info}
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
+                    """, unsafe_allow_html=True)
+
+        # Driveway Lane between rows
+        if cat_idx == 0:
+            st.markdown("""
+            <div class="st-roadway">
+                <span style="font-weight:800; font-size:0.8rem; letter-spacing:1px;">➔ MAIN FACILITY TWO-WAY DRIVEWAY &bull; SPEED LIMIT 10 KM/H ➔</span>
+                <span style="font-size:0.75rem; color:#FBBF24;">PEDESTRIAN WALKWAY</span>
+            </div>
+            """, unsafe_allow_html=True)
+        elif cat_idx == 1:
+            st.markdown("""
+            <div class="st-roadway">
+                <span style="font-weight:800; font-size:0.8rem; letter-spacing:1px;">➔ SECONDARY ONE-WAY DRIVEWAY &bull; ROUTE TO EXIT GATE ➔</span>
+                <span style="font-size:0.75rem; color:#38BDF8;">ZEBRA CROSSWAY</span>
+            </div>
+            """, unsafe_allow_html=True)
+
+    # Outbound Gate 02 Exit Portal
+    st.markdown("""
+    <div style="background: linear-gradient(135deg, #0B1220 0%, #14233B 100%); padding: 10px 16px; border-radius: 8px; border: 1px solid #10B981; display: flex; justify-content: space-between; align-items: center; margin-top: 16px;">
+        <div style="display:flex; align-items:center; gap:10px;">
+            <span style="display:inline-block; width:70px; height:8px; border-radius:3px; background:repeating-linear-gradient(45deg, #EF4444, #EF4444 8px, #FFFFFF 8px, #FFFFFF 16px);"></span>
+            <span style="color:#10B981; font-weight:800; font-size:0.92rem;">GATE 02 &bull; OUTBOUND DEPARTURE EXIT & TARIFF PAYMENT KIOSK</span>
+        </div>
+        <span style="color:#22D3EE; font-weight:700; font-size:0.8rem; background:rgba(34,211,238,0.15); padding:2px 8px; border-radius:12px;">● AUTOMATIC RELEASE READY</span>
+    </div>
+    """, unsafe_allow_html=True)
 
 # ==============================================================================
 # PAGE 3: GUARD COMMAND CENTER
