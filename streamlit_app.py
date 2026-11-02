@@ -81,47 +81,53 @@ _bg_css = f"""
 st.markdown("<style>\n" + _bg_css + """
     /* Semi-transparent frosted smart-city glass cards for content columns */
     div[data-testid="column"] {
-        background: rgba(15, 23, 42, 0.72) !important;
-        backdrop-filter: blur(12px) !important;
-        -webkit-backdrop-filter: blur(12px) !important;
+        background: rgba(11, 18, 32, 0.84) !important;
+        backdrop-filter: blur(14px) !important;
+        -webkit-backdrop-filter: blur(14px) !important;
         border-radius: 14px !important;
-        padding: 20px 22px !important;
-        border: 1.5px solid rgba(56, 189, 248, 0.25) !important;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45) !important;
-        margin-bottom: 14px !important;
+        padding: 22px 24px !important;
+        border: 1.5px solid rgba(56, 189, 248, 0.35) !important;
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.55) !important;
+        margin-bottom: 16px !important;
     }
 
-    /* Ultra-Visible High-Contrast Typography */
-    h1, [data-testid="stHeadingWithActionElements"] h1, [data-testid="stMarkdownContainer"] h1 {
+    /* Ultra-Visible High-Contrast Typography Across All Levels */
+    .main h1, .main h1 *, [data-testid="stHeadingWithActionElements"] h1, [data-testid="stMarkdownContainer"] h1 {
         color: #FFFFFF !important;
         font-weight: 900 !important;
         letter-spacing: -0.3px !important;
-        text-shadow: 0 2px 12px rgba(0, 0, 0, 0.95), 0 0 4px rgba(0, 0, 0, 0.9) !important;
+        text-shadow: 0 2px 14px rgba(0, 0, 0, 0.95), 0 0 3px #000000 !important;
     }
-    h2, h3, h4, [data-testid="stHeadingWithActionElements"] h2, [data-testid="stHeadingWithActionElements"] h3, [data-testid="stMarkdownContainer"] h2, [data-testid="stMarkdownContainer"] h3 {
+    .main h2, .main h2 *,
+    .main h3, .main h3 *,
+    .main h4, .main h4 *,
+    [data-testid="stHeadingWithActionElements"] h2,
+    [data-testid="stHeadingWithActionElements"] h3,
+    [data-testid="stMarkdownContainer"] h2,
+    [data-testid="stMarkdownContainer"] h3 {
         color: #38BDF8 !important;
         font-weight: 800 !important;
-        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.95) !important;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.95), 0 0 2px #000000 !important;
     }
-    .main p, [data-testid="stMarkdownContainer"] p {
+    .main p, .main span, .main div, [data-testid="stMarkdownContainer"] p {
         color: #F8FAFC !important;
-        text-shadow: 0 1px 4px rgba(0, 0, 0, 0.85) !important;
     }
     .main [data-testid="stCaptionContainer"] p,
     .main caption, .main small {
         color: #CBD5E1 !important;
         font-weight: 600 !important;
-        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85) !important;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9) !important;
     }
 
     /* All Widget & Input Labels in Main Area */
     [data-testid="stWidgetLabel"] label,
     [data-testid="stWidgetLabel"] p,
-    [data-testid="stWidgetLabel"] span {
+    [data-testid="stWidgetLabel"] span,
+    [data-testid="stWidgetLabel"] * {
         color: #22D3EE !important;
         font-weight: 800 !important;
-        font-size: 0.95rem !important;
-        text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9) !important;
+        font-size: 0.98rem !important;
+        text-shadow: 0 1px 4px rgba(0, 0, 0, 0.95) !important;
     }
 
     /* Radio button options in main body */
@@ -130,20 +136,33 @@ st.markdown("<style>\n" + _bg_css + """
     .main [data-baseweb="radio"] * {
         color: #FFFFFF !important;
         font-weight: 700 !important;
-        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9) !important;
+        font-size: 0.95rem !important;
+        text-shadow: 0 1px 4px rgba(0, 0, 0, 0.95) !important;
     }
 
     /* High-contrast Input fields */
     .main input[type="text"], .main input, .main textarea {
         background-color: #0F172A !important;
         color: #FFFFFF !important;
-        border: 1.5px solid #38BDF8 !important;
+        border: 2px solid #38BDF8 !important;
         border-radius: 8px !important;
-        font-weight: 700 !important;
-        font-size: 0.95rem !important;
+        font-weight: 800 !important;
+        font-size: 1rem !important;
+        box-shadow: 0 0 12px rgba(56, 189, 248, 0.25) !important;
     }
     .main input::placeholder {
         color: #94A3B8 !important;
+    }
+
+    /* Selectbox dropdowns */
+    .main [data-baseweb="select"] * {
+        color: #FFFFFF !important;
+        font-weight: 700 !important;
+        background-color: #0F172A !important;
+    }
+    div[data-baseweb="popover"] * {
+        color: #FFFFFF !important;
+        background-color: #0B1220 !important;
     }
 
     /* Status Badges */
