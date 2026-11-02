@@ -92,8 +92,27 @@ async function checkGlobalSystemHealth() {
   }
 }
 
+// 5. Lightweight Parallax Scroll Effect for Background
+function initParallaxScroll() {
+  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  if (window.innerWidth < 768) return; // Disable on small mobile devices
+
+  let ticking = false;
+  window.addEventListener("scroll", function() {
+    if (!ticking) {
+      window.requestAnimationFrame(function() {
+        const scrolled = window.pageYOffset || document.documentElement.scrollTop;
+        document.body.style.backgroundPositionY = "calc(0px + " + (scrolled * 0.22) + "px)";
+        ticking = false;
+      });
+      ticking = true;
+    }
+  }, { passive: true });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   checkGlobalSystemHealth();
+  initParallaxScroll();
   // Close modals on escape key or clicking backdrop
   document.querySelectorAll(".modal-overlay").forEach(modal => {
     modal.addEventListener("click", (e) => {

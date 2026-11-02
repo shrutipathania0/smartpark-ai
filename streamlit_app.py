@@ -50,7 +50,9 @@ st.set_page_config(
 )
 
 # Helper to load background image as base64
-def get_base64_bg(image_path: str = "static/images/smartpark_bg.jpg") -> str:
+def get_base64_bg(image_path: str = "static/images/smartpark-garage-bg.png") -> str:
+    if not os.path.exists(image_path):
+        image_path = "static/images/smartpark_bg.jpg"
     if os.path.exists(image_path):
         with open(image_path, "rb") as img_file:
             return base64.b64encode(img_file.read()).decode("utf-8")
@@ -59,9 +61,9 @@ def get_base64_bg(image_path: str = "static/images/smartpark_bg.jpg") -> str:
 _bg_b64 = get_base64_bg()
 _bg_css = f"""
     [data-testid="stAppViewContainer"] {{
-        background-image: linear-gradient(135deg, rgba(243, 246, 250, 0.90) 0%, rgba(226, 232, 240, 0.86) 100%), url("data:image/jpeg;base64,{_bg_b64}");
+        background-image: linear-gradient(180deg, rgba(241, 245, 249, 0.32) 0%, rgba(226, 232, 240, 0.38) 100%), url("data:image/png;base64,{_bg_b64}");
         background-size: cover;
-        background-position: center;
+        background-position: center 0px;
         background-attachment: fixed;
     }}
 """ if _bg_b64 else ""
@@ -229,6 +231,58 @@ def get_st_cone_svg() -> str:
       <circle cx="40" cy="40" r="3" fill="#9A3412"/>
     </svg>
     """
+
+# Parallax Controller & Alert Card Helpers
+st.components.v1.html("""
+<script>
+(function() {
+  const container = window.parent.document.querySelector('[data-testid="stAppViewContainer"]');
+  if (!container) return;
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  let ticking = false;
+  container.addEventListener('scroll', function() {
+    if (!ticking) {
+      window.requestAnimationFrame(function() {
+        const y = container.scrollTop;
+        container.style.backgroundPositionY = (y * 0.22) + 'px';
+        ticking = false;
+      });
+      ticking = true;
+    }
+  }, { passive: true });
+})();
+</script>
+""", height=0, width=0)
+
+def get_friendly_alert_info(alert_type: str):
+    info = {
+        "OBJECT_OBSTRUCTION": ("Object Obstruction Detected", "Physical obstacle or foreign object obstructing parking bay."),
+        "LANE_BLOCKAGE": ("Access Lane Blockage Incident", "Driveway or access route obstructed, impeding vehicle circulation."),
+        "UNAUTHORIZED_PARKING": ("Unauthorized Parking Detected", "Unregistered vehicle detected in facility without an active permit."),
+        "OVERSTAY": ("Duration Overstay Warning", "Vehicle has exceeded maximum permitted complimentary duration threshold."),
+        "CROSS_PARKING": ("Cross-Bay Straddle Parking", "Vehicle parked across boundary lines occupying multiple stalls."),
+        "WRONG_SPACE": ("Wrong Bay Occupancy", "Vehicle parked in a different bay from its deterministic reservation.")
+    }
+    return info.get(alert_type, (alert_type.replace("_", " ").title(), "Operational facility anomaly detected."))
+
+def get_severity_badge_html(severity: str):
+    colors = {
+        "CRITICAL": ("#F43F5E", "rgba(244, 63, 94, 0.15)"),
+        "HIGH": ("#F97316", "rgba(249, 115, 22, 0.15)"),
+        "MEDIUM": ("#F59E0B", "rgba(245, 158, 11, 0.15)"),
+        "LOW": ("#3B82F6", "rgba(59, 130, 246, 0.15)")
+    }
+    col, bg = colors.get(severity, ("#64748B", "rgba(100, 116, 139, 0.15)"))
+    return f'<span style="background:{bg}; color:{col}; border:1px solid {col}; padding:3px 10px; border-radius:12px; font-size:0.75rem; font-weight:800; letter-spacing:0.5px;">● {severity}</span>'
+
+def get_status_badge_html(status: str):
+    if status == "OPEN":
+        return '<span style="background:rgba(239, 68, 68, 0.15); color:#EF4444; border:1px solid #EF4444; padding:3px 10px; border-radius:12px; font-size:0.75rem; font-weight:800;">🔴 NEW</span>'
+    elif status == "ACKNOWLEDGED":
+        return '<span style="background:rgba(59, 130, 246, 0.15); color:#3B82F6; border:1px solid #3B82F6; padding:3px 10px; border-radius:12px; font-size:0.75rem; font-weight:800;">🟡 IN PROGRESS</span>'
+    elif status == "RESOLVED":
+        return '<span style="background:rgba(16, 185, 129, 0.15); color:#10B981; border:1px solid #10B981; padding:3px 10px; border-radius:12px; font-size:0.75rem; font-weight:800;">✅ RESOLVED</span>'
+    return f'<span style="background:#334155; color:#F8FAFC; padding:3px 10px; border-radius:12px; font-size:0.75rem; font-weight:700;">{status}</span>'
 
 # Sidebar Navigation
 st.sidebar.title("🅿️ SmartPark AI")
@@ -607,51 +661,34 @@ elif page == "🅿️ Parking Area & Simulation":
                     # Top-down visual element
                     if s["status"] == "OCCUPIED":
                         veh_visual = get_st_topdown_vehicle_svg(s["id"])
-                        mid_content = f"""
-                        <div style="display:flex; flex-direction:column; align-items:center; margin: 4px 0;">
-                            {veh_visual}
-                            <span class="plate-badge" style="margin-top:4px;">{s['registration_number'] or 'PARKED'}</span>
-                        </div>
-                        """
+                        plate_text = s['registration_number'] or 'PARKED'
+                        mid_content = f'<div style="display:flex; flex-direction:column; align-items:center; margin:4px 0;">{veh_visual}<span class="plate-badge" style="margin-top:4px;">{plate_text}</span></div>'
                     elif s["status"] == "RESERVED":
-                        mid_content = f"""
-                        <div style="text-align:center; padding: 24px 0;">
-                            <div style="font-size:2rem; margin-bottom:4px;">🟡</div>
-                            <div style="font-size:0.75rem; font-weight:800; color:#FBBF24; text-transform:uppercase;">IN TRANSIT</div>
-                            {f'<span class="plate-badge" style="background:#D97706; margin-top:4px;">{s["registration_number"]}</span>' if s.get("registration_number") else ''}
-                        </div>
-                        """
+                        plate_badge = f'<span class="plate-badge" style="background:#D97706; margin-top:4px;">{s["registration_number"]}</span>' if s.get("registration_number") else ''
+                        mid_content = f'<div style="text-align:center; padding:22px 0;"><div style="font-size:2rem; margin-bottom:4px;">🟡</div><div style="font-size:0.75rem; font-weight:800; color:#FBBF24; text-transform:uppercase;">IN TRANSIT</div>{plate_badge}</div>'
                     elif s["status"] == "BLOCKED":
-                        mid_content = f"""
-                        <div style="text-align:center; padding: 18px 0;">
-                            {get_st_cone_svg()}
-                            <div style="font-size:0.75rem; font-weight:800; color:#F43F5E; margin-top:4px;">OBSTRUCTED</div>
-                        </div>
-                        """
+                        cone_svg = get_st_cone_svg()
+                        mid_content = f'<div style="text-align:center; padding:18px 0;">{cone_svg}<div style="font-size:0.75rem; font-weight:800; color:#F43F5E; margin-top:4px;">OBSTRUCTED</div></div>'
                     else:
-                        # VACANT: clean stall floor with checkmark, no vehicle
-                        mid_content = f"""
-                        <div style="text-align:center; padding: 28px 0;">
-                            <div style="width:36px; height:36px; border-radius:50%; background:rgba(16,185,129,0.15); display:inline-flex; align-items:center; justify-content:center; color:#10B981; font-size:1.1rem; font-weight:900; margin-bottom:4px;">✓</div>
-                            <div style="font-size:0.8rem; font-weight:800; color:#10B981;">AVAILABLE</div>
-                            <div style="font-size:0.7rem; color:#94A3B8;">Ready to park</div>
-                        </div>
-                        """
+                        # VACANT: clean stall floor with checkmark, subtle available space visual
+                        mid_content = '<div style="text-align:center; padding:26px 0;"><div style="width:36px; height:36px; border-radius:50%; background:rgba(16,185,129,0.15); display:inline-flex; align-items:center; justify-content:center; color:#10B981; font-size:1.15rem; font-weight:900; margin:0 auto 6px auto;">✓</div><div style="font-size:0.82rem; font-weight:800; color:#10B981; letter-spacing:0.5px;">AVAILABLE</div><div style="font-size:0.72rem; color:#94A3B8;">Ready for vehicle</div></div>'
 
-                    st.markdown(f"""
-                    <div class="st-parking-bay" style="border-top-color:{border_color}; border-left-color:{border_color}; border-right-color:{border_color};">
-                        <div class="st-wheel-stop"></div>
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <span style="font-size:1.15rem; font-weight:800; color:#FFFFFF;">{cat_icon} {s['slot_number']}</span>
-                            <span class="status-badge-{stat_lower}">{s['status']}</span>
-                        </div>
-                        {mid_content}
-                        <div style="font-size:0.72rem; color:#94A3B8; border-top:1px dashed #334155; padding-top:4px; display:flex; justify-content:space-between;">
-                            <span>{s['category'].split(' ')[0]}</span>
-                            <span style="color:#22D3EE;">Active IoT</span>
-                        </div>
-                    </div>
-                    """, unsafe_allow_html=True)
+                    cat_short = s['category'].split(' ')[0]
+                    stall_card_html = (
+                        f'<div class="st-parking-bay" style="border-top-color:{border_color}; border-left-color:{border_color}; border-right-color:{border_color};">'
+                        f'<div class="st-wheel-stop"></div>'
+                        f'<div style="display:flex; justify-content:space-between; align-items:center;">'
+                        f'<span style="font-size:1.15rem; font-weight:800; color:#FFFFFF;">{cat_icon} {s["slot_number"]}</span>'
+                        f'<span class="status-badge-{stat_lower}">{s["status"]}</span>'
+                        f'</div>'
+                        f'{mid_content}'
+                        f'<div style="font-size:0.72rem; color:#94A3B8; border-top:1px dashed #334155; padding-top:4px; display:flex; justify-content:space-between;">'
+                        f'<span>{cat_short}</span>'
+                        f'<span style="color:#22D3EE;">Active IoT</span>'
+                        f'</div>'
+                        f'</div>'
+                    )
+                    st.markdown(stall_card_html, unsafe_allow_html=True)
 
         # Driveway Lane between rows
         if cat_idx == 0:
@@ -704,52 +741,193 @@ elif page == "🛡️ Guard Command Center":
 
     st.markdown("---")
 
-    guard_tabs = st.tabs(["🚨 Security Incidents & Alerts", "💲 Dynamic Pricing Rules", "📋 Historical Audit Trail", "🖥️ System Health"])
+    guard_tabs = st.tabs([
+        "🚨 Active Alerts & Incidents",
+        "📜 Alert History & Audit",
+        "💲 Dynamic Pricing Rules",
+        "📋 Historical Audit Trail",
+        "🖥️ System Health"
+    ])
 
+    all_facility_alerts = get_alerts(limit=100)
+
+    # --------------------------------------------------------------------------
+    # TAB 1: ACTIVE ALERTS & INCIDENTS (Unresolved Only)
+    # --------------------------------------------------------------------------
     with guard_tabs[0]:
-        st.subheader("Active Incidents & Alerts Lifecycle")
-        alert_counts = get_alert_counts()
+        st.subheader("Active Alerts & Incidents")
+        st.caption("Operational facility security alerts requiring immediate guard review and resolution.")
 
-        ac_cols = st.columns(4)
-        ac_cols[0].metric("Total Recorded", alert_counts["total"])
-        ac_cols[1].metric("New / Open", alert_counts["open"])
-        ac_cols[2].metric("In Progress", alert_counts["in_progress"])
-        ac_cols[3].metric("Resolved", alert_counts["resolved"])
+        active_alerts = [a for a in all_facility_alerts if a["status"] in ("OPEN", "ACKNOWLEDGED")]
 
-        alerts = get_alerts(limit=50)
-        if not alerts:
-            st.success("✅ All clear! No security incidents recorded in the facility.")
+        if not active_alerts:
+            empty_html = (
+                '<div style="background:rgba(16,185,129,0.08); border:2px solid #10B981; border-radius:12px; padding:36px 20px; text-align:center; margin:20px 0;">'
+                '<div style="font-size:3.2rem; margin-bottom:10px;">✅</div>'
+                '<h3 style="color:#10B981; margin:0 0 8px 0; font-weight:800; font-size:1.35rem;">All Clear &mdash; No Active Incidents</h3>'
+                '<p style="color:#94A3B8; font-size:0.95rem; margin:0 auto; max-width:550px; line-height:1.5;">'
+                'All parking stalls, driveways, and sensor barriers are operating normally without unresolved security alerts.'
+                '</p>'
+                '</div>'
+            )
+            st.markdown(empty_html, unsafe_allow_html=True)
         else:
-            for a in alerts:
-                sev_color = "🔴" if a["severity"] in ("CRITICAL", "HIGH") else ("🟡" if a["severity"] == "MEDIUM" else "⚪")
-                status_label = "NEW" if a["status"] == "OPEN" else ("IN PROGRESS" if a["status"] == "ACKNOWLEDGED" else "RESOLVED")
-                
-                with st.expander(f"{sev_color} Alert #{a['id']} &mdash; {a['alert_type']} ({a['severity']}) &bull; [{status_label}]", expanded=(a['status'] in ('OPEN', 'ACKNOWLEDGED'))):
-                    st.write(f"**Description:** {a['description']}")
-                    st.write(f"**Location / Stall:** `{a.get('slot_number') or a.get('lane_id') or 'Facility General'}`")
-                    st.write(f"**Vehicle Involved:** `{a.get('registration_number') or 'None'}`")
-                    st.write(f"**Detected At:** {a['created_at']}")
-                    if a.get("resolved_by"):
-                        st.write(f"**Resolved By:** {a['resolved_by']} at {a.get('resolved_at')}")
-                        st.write(f"**Resolution Note:** *\"{a.get('resolution_note')}\"*")
+            st.warning(f"⚠️ **{len(active_alerts)} Active Incident(s)** currently require guard intervention.")
+            for a in active_alerts:
+                friendly_title, friendly_desc = get_friendly_alert_info(a["alert_type"])
+                sev_badge = get_severity_badge_html(a["severity"])
+                stat_badge = get_status_badge_html(a["status"])
+                accent_border = "#F43F5E" if a["severity"] in ("CRITICAL", "HIGH") else ("#F59E0B" if a["severity"] == "MEDIUM" else "#3B82F6")
+                loc_text = a.get("slot_number") and f"Parking Stall {a['slot_number']}" or (a.get("lane_id") or "Facility Zone")
+                veh_text = a.get("registration_number") or "None detected"
 
-                    if a["status"] in ("OPEN", "ACKNOWLEDGED"):
-                        btn_c1, btn_c2 = st.columns(2)
-                        if a["status"] == "OPEN":
-                            if btn_c1.button(f"👁️ Acknowledge #{a['id']}", key=f"ack_{a['id']}"):
-                                acknowledge_alert(a["id"], guard_username="guard_admin")
-                                st.success(f"Alert #{a['id']} marked IN PROGRESS.")
+                card_html = (
+                    f'<div style="background:#111C32; border:1.5px solid #243552; border-left:6px solid {accent_border}; border-radius:12px; padding:20px; margin-bottom:14px; box-shadow:0 6px 18px rgba(0,0,0,0.35);">'
+                    f'<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; flex-wrap:wrap; gap:8px;">'
+                    f'<div>'
+                    f'<div style="font-size:1.15rem; font-weight:800; color:#F8FAFC;">{friendly_title}</div>'
+                    f'<div style="font-size:0.8rem; color:#94A3B8; margin-top:2px;">Alert ID #{a["id"]} &bull; <span style="font-family:monospace; color:#38BDF8;">{a["alert_type"]}</span> &bull; Detected: {a["created_at"]}</div>'
+                    f'</div>'
+                    f'<div style="display:flex; gap:6px; align-items:center;">{sev_badge} {stat_badge}</div>'
+                    f'</div>'
+                    f'<p style="font-size:0.92rem; color:#CBD5E1; margin:8px 0 14px 0; line-height:1.45;">{a["description"]}</p>'
+                    f'<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; background:#0B1220; padding:12px 16px; border-radius:8px; border:1px solid #1E293B; font-size:0.85rem; color:#94A3B8;">'
+                    f'<div>📍 <strong>Location:</strong> <span style="color:#F8FAFC;">{loc_text}</span></div>'
+                    f'<div>🚗 <strong>Vehicle:</strong> <span style="color:#F8FAFC;">{veh_text}</span></div>'
+                    f'</div>'
+                    f'</div>'
+                )
+                st.markdown(card_html, unsafe_allow_html=True)
+
+                act_col1, act_col2 = st.columns([1, 2])
+                with act_col1:
+                    if a["status"] == "OPEN":
+                        if st.button(f"👁️ Acknowledge #{a['id']}", key=f"active_ack_{a['id']}", use_container_width=True):
+                            acknowledge_alert(a["id"], guard_username="guard_admin")
+                            st.success(f"Incident #{a['id']} acknowledged and moved to IN PROGRESS.")
+                            st.rerun()
+                    else:
+                        st.info("🟡 In Progress by Officer")
+
+                with act_col2:
+                    with st.expander(f"✅ Resolve Incident #{a['id']}", expanded=False):
+                        with st.form(key=f"active_res_form_{a['id']}"):
+                            res_note = st.text_input("Resolution Note", value="Officer inspected stall and verified condition resolved safely.", key=f"res_note_{a['id']}")
+                            if st.form_submit_button(f"Confirm Resolution #{a['id']}", type="primary"):
+                                resolve_alert(a["id"], guard_username="guard_admin", resolution_note=res_note)
+                                st.success(f"Incident #{a['id']} resolved and archived to Alert History.")
                                 st.rerun()
 
-                        with btn_c2:
-                            with st.form(key=f"res_form_{a['id']}"):
-                                note_val = st.text_input("Resolution Note", value="Guard confirmed condition addressed and safe.", key=f"note_{a['id']}")
-                                if st.form_submit_button(f"✅ Mark #{a['id']} Resolved"):
-                                    resolve_alert(a["id"], guard_username="guard_admin", resolution_note=note_val)
-                                    st.success(f"Alert #{a['id']} RESOLVED.")
-                                    st.rerun()
-
+    # --------------------------------------------------------------------------
+    # TAB 2: ALERT HISTORY & AUDIT (Complete Archive with Filters & Search)
+    # --------------------------------------------------------------------------
     with guard_tabs[1]:
+        st.subheader("Historical Incident Audit Trail")
+        st.caption("Immutable operational history of all facility incidents, guard acknowledgements, and resolution notes.")
+
+        alert_counts = get_alert_counts()
+        hc_cols = st.columns(5)
+        hc_cols[0].metric("Total Historical", alert_counts["total"], "All events")
+        hc_cols[1].metric("Active Alerts", alert_counts["open"] + alert_counts["in_progress"], "Needs action")
+        hc_cols[2].metric("New / Open", alert_counts["open"], "Awaiting triage")
+        hc_cols[3].metric("In Progress", alert_counts["in_progress"], "Under guard review")
+        hc_cols[4].metric("Resolved", alert_counts["resolved"], "Safely closed")
+
+        st.markdown("---")
+
+        f_col1, f_col2, f_col3, f_col4 = st.columns([2, 2, 2, 2])
+        with f_col1:
+            h_status_filter = st.selectbox(
+                "Filter by Status",
+                ["All Historical Alerts", "Resolved Only", "In Progress Only", "New / Open Only"],
+                key="h_stat_filter"
+            )
+        with f_col2:
+            h_sev_filter = st.selectbox(
+                "Filter by Severity",
+                ["All Severities", "CRITICAL", "HIGH", "MEDIUM", "LOW"],
+                key="h_sev_filter"
+            )
+        with f_col3:
+            h_sort = st.selectbox(
+                "Sort Records",
+                ["Newest First", "Oldest First", "Severity (High to Low)"],
+                key="h_sort_select"
+            )
+        with f_col4:
+            h_search = st.text_input("Search (ID, Plate, Stall)", placeholder="e.g. 14, PB10, A-04", key="h_search_input").strip().lower()
+
+        # Apply filtering
+        history_list = list(all_facility_alerts)
+        if h_status_filter == "Resolved Only":
+            history_list = [x for x in history_list if x["status"] == "RESOLVED"]
+        elif h_status_filter == "In Progress Only":
+            history_list = [x for x in history_list if x["status"] == "ACKNOWLEDGED"]
+        elif h_status_filter == "New / Open Only":
+            history_list = [x for x in history_list if x["status"] == "OPEN"]
+
+        if h_sev_filter != "All Severities":
+            history_list = [x for x in history_list if x["severity"] == h_sev_filter]
+
+        if h_search:
+            history_list = [
+                x for x in history_list
+                if (h_search in str(x["id"]))
+                or (x.get("registration_number") and h_search in x["registration_number"].lower())
+                or (x.get("slot_number") and h_search in x["slot_number"].lower())
+                or (h_search in x["alert_type"].lower())
+            ]
+
+        # Sorting
+        if h_sort == "Oldest First":
+            history_list.sort(key=lambda x: x["id"])
+        elif h_sort == "Severity (High to Low)":
+            sev_rank = {"CRITICAL": 4, "HIGH": 3, "MEDIUM": 2, "LOW": 1}
+            history_list.sort(key=lambda x: (sev_rank.get(x["severity"], 0), x["id"]), reverse=True)
+        else:
+            history_list.sort(key=lambda x: x["id"], reverse=True)
+
+        st.caption(f"Showing **{len(history_list)}** matching incident records")
+
+        if not history_list:
+            st.info("No historical alerts match the active search and filter criteria.")
+        else:
+            for h in history_list:
+                h_title, _ = get_friendly_alert_info(h["alert_type"])
+                h_sev_badge = get_severity_badge_html(h["severity"])
+                h_stat_badge = get_status_badge_html(h["status"])
+                h_loc = h.get("slot_number") and f"Parking Stall {h['slot_number']}" or (h.get("lane_id") or "Facility Zone")
+                h_veh = h.get("registration_number") or "None"
+
+                res_html = ""
+                if h.get("resolved_by"):
+                    res_html = (
+                        f'<div style="background:rgba(16,185,129,0.1); border:1px solid #10B981; border-radius:6px; padding:8px 12px; margin-top:8px; font-size:0.82rem; color:#34D399;">'
+                        f'✅ <strong>Resolved by {h["resolved_by"]}</strong> at {h.get("resolved_at")} &bull; <em>"{h.get("resolution_note") or "Resolved"}"</em>'
+                        f'</div>'
+                    )
+
+                h_card_html = (
+                    f'<div style="background:#111C32; border:1px solid #243552; border-radius:10px; padding:16px; margin-bottom:12px; box-shadow:0 4px 12px rgba(0,0,0,0.25);">'
+                    f'<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">'
+                    f'<div>'
+                    f'<span style="font-weight:800; font-size:1.02rem; color:#FFFFFF;">#{h["id"]} &bull; {h_title}</span>'
+                    f'<span style="font-size:0.75rem; color:#94A3B8; margin-left:8px;">Detected: {h["created_at"]}</span>'
+                    f'</div>'
+                    f'<div style="display:flex; gap:6px;">{h_sev_badge} {h_stat_badge}</div>'
+                    f'</div>'
+                    f'<div style="font-size:0.88rem; color:#CBD5E1; margin:8px 0;">{h["description"]}</div>'
+                    f'<div style="display:flex; gap:16px; font-size:0.8rem; color:#94A3B8; flex-wrap:wrap;">'
+                    f'<span>📍 <strong>Location:</strong> {h_loc}</span>'
+                    f'<span>🚗 <strong>Vehicle:</strong> {h_veh}</span>'
+                    f'<span>🏷️ <strong>Code:</strong> <code style="color:#38BDF8;">{h["alert_type"]}</code></span>'
+                    f'</div>'
+                    f'{res_html}'
+                    f'</div>'
+                )
+                st.markdown(h_card_html, unsafe_allow_html=True)
+
+    with guard_tabs[2]:
         st.subheader("Dynamic Facility Pricing Tariff")
         st.caption("Pricing snapshot preservation: rule updates apply to all future incoming parking sessions.")
         rules = get_pricing_rules()
@@ -767,7 +945,7 @@ elif page == "🛡️ Guard Command Center":
                     st.success(f"✅ Successfully updated pricing tariff for {cat}!")
                     st.rerun()
 
-    with guard_tabs[2]:
+    with guard_tabs[3]:
         st.subheader("Recent Parking Sessions Audit")
         recent = query_all("""
             SELECT s.ticket_id, s.registration_number, s.parking_category, p.slot_number, 
@@ -781,7 +959,7 @@ elif page == "🛡️ Guard Command Center":
         else:
             st.info("No parking session records found.")
 
-    with guard_tabs[3]:
+    with guard_tabs[4]:
         st.subheader("SmartPark AI Operational Diagnostics")
         h_cols = st.columns(2)
         with h_cols[0]:
