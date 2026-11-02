@@ -121,49 +121,140 @@ st.markdown("<style>\n" + _bg_css + """
         color: #0F172A !important;
     }
 
-    /* Slot Card & 2D Top-Down Parking Bays with Subtle 3D Depth */
+    /* PART B: Sidebar Navigation Styling */
+    [data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #0B1730 0%, #111C32 50%, #132747 100%) !important;
+        border-right: 1px solid rgba(34, 211, 238, 0.2) !important;
+        box-shadow: 4px 0 24px rgba(0, 0, 0, 0.4) !important;
+    }
+    [data-testid="stSidebar"] [data-testid="stSidebarNav"] {
+        display: none !important;
+    }
+    [data-testid="stSidebar"] [data-testid="stRadio"] > label {
+        display: none !important;
+    }
+    [data-testid="stSidebar"] div[role="radiogroup"] {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 8px !important;
+        margin-top: 6px !important;
+    }
+    [data-testid="stSidebar"] div[role="radiogroup"] > label {
+        background: rgba(19, 34, 61, 0.72) !important;
+        border: 1px solid rgba(59, 130, 246, 0.2) !important;
+        border-left: 4.5px solid transparent !important;
+        border-radius: 10px !important;
+        padding: 11px 16px !important;
+        margin: 0 !important;
+        cursor: pointer !important;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25) !important;
+        position: relative !important;
+    }
+    [data-testid="stSidebar"] div[role="radiogroup"] > label:hover {
+        transform: translateY(-2.5px) !important;
+        background: rgba(30, 58, 138, 0.5) !important;
+        border-color: rgba(34, 211, 238, 0.5) !important;
+        box-shadow: 0 6px 18px rgba(34, 211, 238, 0.22) !important;
+    }
+    [data-testid="stSidebar"] div[role="radiogroup"] > label:active {
+        transform: scale(0.98) !important;
+    }
+    [data-testid="stSidebar"] div[role="radiogroup"] > label:has(input:checked) {
+        background: linear-gradient(90deg, #1E3A8A 0%, #172554 100%) !important;
+        border-color: rgba(34, 211, 238, 0.65) !important;
+        border-left: 4.5px solid #22D3EE !important;
+        font-weight: 700 !important;
+        box-shadow: 0 4px 18px rgba(34, 211, 238, 0.28) !important;
+    }
+    [data-testid="stSidebar"] div[role="radiogroup"] > label div:first-child {
+        display: none !important;
+    }
+    [data-testid="stSidebar"] div[role="radiogroup"] > label div[data-testid="stMarkdownContainer"] p {
+        color: #F8FAFC !important;
+        font-size: 0.94rem !important;
+        font-weight: 600 !important;
+        margin: 0 !important;
+        letter-spacing: 0.3px !important;
+    }
+
+    /* PART A: 2.5D Realistic Parking Bays */
     .st-parking-bay {
-        background: #111C32;
-        border-top: 3.5px solid #FFFFFF;
-        border-left: 3.5px solid #FFFFFF;
-        border-right: 3.5px solid #FFFFFF;
+        background: linear-gradient(165deg, #13223D 0%, #0D1629 100%);
+        border-top: 4px solid #38BDF8;
+        border-left: 3.5px solid rgba(255, 255, 255, 0.35);
+        border-right: 3.5px solid rgba(255, 255, 255, 0.35);
         border-bottom: 2.5px dashed #475569;
-        border-radius: 10px;
-        min-height: 255px;
+        border-radius: 12px;
+        min-height: 262px;
         padding: 12px;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        margin-bottom: 14px;
-        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        margin-bottom: 16px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(255,255,255,0.08);
+        transform: perspective(800px) rotateX(5deg);
+        transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.22s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.22s ease;
+        position: relative;
     }
     .st-parking-bay:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 12px 26px rgba(0, 0, 0, 0.5);
+        transform: perspective(800px) rotateX(0deg) translateY(-6px) scale(1.02);
+        box-shadow: 0 16px 32px rgba(0, 0, 0, 0.55), 0 0 0 2px #22D3EE, 0 0 18px rgba(34, 211, 238, 0.35);
     }
     .st-wheel-stop {
-        width: 62%;
-        height: 7px;
-        background: linear-gradient(180deg, #E2E8F0 0%, #94A3B8 100%);
-        border-radius: 3px;
-        box-shadow: 0 3px 5px rgba(0,0,0,0.3);
-        margin: 0 auto 8px auto;
+        width: 65%;
+        height: 8px;
+        background: linear-gradient(180deg, #CBD5E1 0%, #64748B 50%, #334155 100%);
+        border-radius: 4px;
+        box-shadow: 0 3px 6px rgba(0,0,0,0.45), inset 0 1px 1px rgba(255,255,255,0.6);
+        margin: 0 auto 10px auto;
+        border: 1px solid rgba(255,255,255,0.2);
     }
     .st-roadway {
         background: #0B1220;
         border-radius: 8px;
-        height: 48px;
+        height: 50px;
         margin: 18px 0;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 0 18px;
+        padding: 0 20px;
         position: relative;
-        box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.5);
+        box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.6);
         color: #F8FAFC;
-        border: 1px dashed #38BDF8;
+        border: 1.5px dashed #38BDF8;
     }
+
+    /* Simulation Control Buttons Pill Styling */
+    div[data-testid="stHorizontalBlock"] button {
+        border-radius: 22px !important;
+        font-weight: 700 !important;
+        font-size: 0.88rem !important;
+        padding: 8px 16px !important;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        border: 1px solid rgba(34, 211, 238, 0.3) !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
+    }
+    div[data-testid="stHorizontalBlock"] button:hover {
+        transform: translateY(-3px) !important;
+        box-shadow: 0 8px 22px rgba(34, 211, 238, 0.35) !important;
+        border-color: #22D3EE !important;
+    }
+    div[data-testid="stHorizontalBlock"] button:active {
+        transform: scale(0.97) !important;
+    }
+
+    /* Stall Telemetry Inspector Panel */
+    .stall-inspector-panel {
+        background: linear-gradient(145deg, #111C32 0%, #0B1220 100%);
+        border: 1.5px solid #22D3EE;
+        border-radius: 14px;
+        padding: 22px;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+        color: #F8FAFC;
+        margin-top: 14px;
+    }
+
     .slot-card {
         border-radius: 10px;
         padding: 14px;
@@ -175,11 +266,21 @@ st.markdown("<style>\n" + _bg_css + """
     .plate-badge {
         background: #0284C7;
         color: #FFFFFF !important;
-        padding: 3px 8px;
+        padding: 4px 10px;
         border-radius: 4px;
         font-weight: 800;
         font-size: 0.85rem;
         letter-spacing: 0.5px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+
+    /* Accessibility: Reduced Motion */
+    @media (prefers-reduced-motion: reduce) {
+        * {
+            animation: none !important;
+            transition: none !important;
+            transform: none !important;
+        }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -284,9 +385,28 @@ def get_status_badge_html(status: str):
         return '<span style="background:rgba(16, 185, 129, 0.15); color:#10B981; border:1px solid #10B981; padding:3px 10px; border-radius:12px; font-size:0.75rem; font-weight:800;">✅ RESOLVED</span>'
     return f'<span style="background:#334155; color:#F8FAFC; padding:3px 10px; border-radius:12px; font-size:0.75rem; font-weight:700;">{status}</span>'
 
-# Sidebar Navigation
-st.sidebar.title("🅿️ SmartPark AI")
-st.sidebar.caption("IoT Parking Facility & Computer Vision ANPR")
+# PART B: Sidebar Navigation & Brand Identity
+st.sidebar.markdown("""
+<div style="padding: 10px 4px 18px 4px; border-bottom: 1px solid rgba(34, 211, 238, 0.22); margin-bottom: 14px;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+        <div style="width: 44px; height: 44px; min-width: 44px; border-radius: 12px; background: linear-gradient(135deg, #0284C7 0%, #22D3EE 100%); display: flex; align-items: center; justify-content: center; font-size: 1.6rem; box-shadow: 0 0 16px rgba(34, 211, 238, 0.55), inset 0 1px 1px rgba(255,255,255,0.4);">
+            🅿️
+        </div>
+        <div>
+            <div style="font-size: 1.35rem; font-weight: 900; letter-spacing: -0.5px; color: #FFFFFF; line-height: 1.2;">
+                SmartPark <span style="color: #22D3EE;">AI</span>
+            </div>
+            <div style="font-size: 0.76rem; color: #94A3B8; font-weight: 600; letter-spacing: 0.2px; line-height: 1.2; margin-top: 2px;">
+                Intelligent Parking Management
+            </div>
+        </div>
+    </div>
+    <div style="display: flex; gap: 6px; margin-top: 12px;">
+        <span style="background: rgba(34, 211, 238, 0.15); color: #22D3EE; border: 1px solid rgba(34, 211, 238, 0.35); font-size: 0.68rem; font-weight: 800; padding: 2px 8px; border-radius: 10px;">v2.4 SMART CITY</span>
+        <span style="background: rgba(16, 185, 129, 0.15); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.35); font-size: 0.68rem; font-weight: 800; padding: 2px 8px; border-radius: 10px;">● ONLINE</span>
+    </div>
+</div>
+""", unsafe_allow_html=True)
 
 page = st.sidebar.radio(
     "Navigation Menu",
@@ -299,8 +419,22 @@ page = st.sidebar.radio(
     ]
 )
 
-st.sidebar.markdown("---")
-st.sidebar.caption("⚡ Offline Local Engine: SQLite + YOLOv8 + EasyOCR")
+st.sidebar.markdown("""
+<div style="margin-top: 24px; padding: 14px; background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(34, 211, 238, 0.22); border-radius: 12px; box-shadow: 0 4px 14px rgba(0,0,0,0.3);">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+        <span style="font-size: 0.75rem; font-weight: 800; color: #94A3B8; letter-spacing: 0.5px;">SYSTEM STATUS</span>
+        <span style="display: inline-flex; align-items: center; gap: 5px; background: rgba(16, 185, 129, 0.18); color: #10B981; border: 1px solid #10B981; font-size: 0.7rem; font-weight: 800; padding: 2px 8px; border-radius: 10px;">
+            <span style="width: 7px; height: 7px; border-radius: 50%; background: #10B981; box-shadow: 0 0 6px #10B981;"></span> ONLINE
+        </span>
+    </div>
+    <div style="font-size: 0.8rem; color: #F8FAFC; font-weight: 700; margin-bottom: 3px;">
+        SQLite + YOLOv8 + EasyOCR
+    </div>
+    <div style="font-size: 0.72rem; color: #64748B;">
+        15 Stalls Active &bull; AI Interlock Ready
+    </div>
+</div>
+""", unsafe_allow_html=True)
 
 # ==============================================================================
 # PAGE 1: DRIVER ENTRY GATE
@@ -509,7 +643,27 @@ elif page == "🅿️ Parking Area & Simulation":
     st.write("Live visualization of all facility parking stalls with active status colors and interactive telemetry simulation.")
 
     # Simulation Action Bar
-    st.subheader("Facility Simulation Controls")
+    st.markdown("""
+    <div style="background: linear-gradient(135deg, rgba(17, 28, 50, 0.95) 0%, rgba(11, 18, 32, 0.95) 100%); border: 1.5px solid rgba(34, 211, 238, 0.25); border-left: 5px solid #22D3EE; border-radius: 12px; padding: 14px 20px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; box-shadow: 0 4px 16px rgba(0,0,0,0.3);">
+        <div>
+            <div style="font-size: 1.1rem; font-weight: 800; color: #FFFFFF; display: flex; align-items: center; gap: 8px;">
+                <span>🔬</span> Facility IoT Telemetry & Incident Simulation
+            </div>
+            <div style="font-size: 0.8rem; color: #94A3B8; margin-top: 2px;">
+                Interactive hardware triggers: simulate sensor dockings, bay obstructions, lane blockages, and facility resets.
+            </div>
+        </div>
+        <div style="display: flex; gap: 6px;">
+            <span style="background: rgba(34, 211, 238, 0.15); color: #22D3EE; border: 1px solid rgba(34, 211, 238, 0.3); font-size: 0.72rem; font-weight: 800; padding: 3px 10px; border-radius: 12px;">
+                40 kHz SENSORS
+            </span>
+            <span style="background: rgba(16, 185, 129, 0.15); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.3); font-size: 0.72rem; font-weight: 800; padding: 3px 10px; border-radius: 12px;">
+                ● SENSORS ONLINE
+            </span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
     sim_cols = st.columns(5)
 
     with sim_cols[0]:
@@ -576,10 +730,10 @@ elif page == "🅿️ Parking Area & Simulation":
 
     # Legend
     leg_col1, leg_col2, leg_col3, leg_col4 = st.columns(4)
-    leg_col1.markdown("<span class='status-badge-vacant'>● VACANT</span> (Ready for allocation)", unsafe_allow_html=True)
-    leg_col2.markdown("<span class='status-badge-reserved'>● RESERVED</span> (Ticket issued, vehicle in transit)", unsafe_allow_html=True)
-    leg_col3.markdown("<span class='status-badge-occupied'>● OCCUPIED</span> (Vehicle actively parked, billing active)", unsafe_allow_html=True)
-    leg_col4.markdown("<span class='status-badge-blocked'>● BLOCKED</span> (Physically obstructed / Incident)", unsafe_allow_html=True)
+    leg_col1.markdown("<span class='status-badge-vacant'>● VACANT</span> &nbsp;<span style='color:#CBD5E1; font-size:0.85rem;'>Ready for allocation</span>", unsafe_allow_html=True)
+    leg_col2.markdown("<span class='status-badge-reserved'>● RESERVED</span> &nbsp;<span style='color:#CBD5E1; font-size:0.85rem;'>Ticket issued, in transit</span>", unsafe_allow_html=True)
+    leg_col3.markdown("<span class='status-badge-occupied'>● OCCUPIED</span> &nbsp;<span style='color:#CBD5E1; font-size:0.85rem;'>Actively parked, billing on</span>", unsafe_allow_html=True)
+    leg_col4.markdown("<span class='status-badge-blocked'>● BLOCKED</span> &nbsp;<span style='color:#CBD5E1; font-size:0.85rem;'>Obstructed / incident</span>", unsafe_allow_html=True)
 
     st.write("")
     slots = get_all_slots()
@@ -658,33 +812,64 @@ elif page == "🅿️ Parking Area & Simulation":
                         else "#64748B"))
                     )
 
+                    # Distinct Row-based Badge
+                    if s["category"] == "Disabled Parking":
+                        row_feature_badge = '<span style="background:rgba(59,130,246,0.18); color:#93C5FD; border:1px solid #3B82F6; padding:2px 6px; border-radius:6px; font-size:0.68rem; font-weight:800;">♿ ACCESSIBLE</span>'
+                    elif s["category"] == "EV Charging Parking":
+                        row_feature_badge = '<span style="background:rgba(34,211,238,0.18); color:#22D3EE; border:1px solid #22D3EE; padding:2px 6px; border-radius:6px; font-size:0.68rem; font-weight:800;">⚡ 50kW FAST</span>'
+                    else:
+                        row_feature_badge = '<span style="background:rgba(100,116,139,0.18); color:#CBD5E1; border:1px solid #64748B; padding:2px 6px; border-radius:6px; font-size:0.68rem; font-weight:800;">🚗 STANDARD</span>'
+
                     # Top-down visual element
                     if s["status"] == "OCCUPIED":
                         veh_visual = get_st_topdown_vehicle_svg(s["id"])
                         plate_text = s['registration_number'] or 'PARKED'
-                        mid_content = f'<div style="display:flex; flex-direction:column; align-items:center; margin:4px 0;">{veh_visual}<span class="plate-badge" style="margin-top:4px;">{plate_text}</span></div>'
+                        mid_content = (
+                            f'<div style="display:flex; flex-direction:column; align-items:center; margin:2px 0;">'
+                            f'{veh_visual}'
+                            f'<span class="plate-badge" style="margin-top:6px;">{plate_text}</span>'
+                            f'</div>'
+                        )
                     elif s["status"] == "RESERVED":
-                        plate_badge = f'<span class="plate-badge" style="background:#D97706; margin-top:4px;">{s["registration_number"]}</span>' if s.get("registration_number") else ''
-                        mid_content = f'<div style="text-align:center; padding:22px 0;"><div style="font-size:2rem; margin-bottom:4px;">🟡</div><div style="font-size:0.75rem; font-weight:800; color:#FBBF24; text-transform:uppercase;">IN TRANSIT</div>{plate_badge}</div>'
+                        plate_badge = f'<span class="plate-badge" style="background:#D97706; margin-top:6px;">{s["registration_number"]}</span>' if s.get("registration_number") else ''
+                        mid_content = (
+                            f'<div style="text-align:center; padding:20px 0;">'
+                            f'<div style="font-size:2.2rem; margin-bottom:4px; filter:drop-shadow(0 0 8px rgba(245,158,11,0.5));">🟡</div>'
+                            f'<div style="font-size:0.8rem; font-weight:800; color:#FBBF24; letter-spacing:0.8px; text-transform:uppercase;">IN TRANSIT</div>'
+                            f'{plate_badge}'
+                            f'</div>'
+                        )
                     elif s["status"] == "BLOCKED":
                         cone_svg = get_st_cone_svg()
-                        mid_content = f'<div style="text-align:center; padding:18px 0;">{cone_svg}<div style="font-size:0.75rem; font-weight:800; color:#F43F5E; margin-top:4px;">OBSTRUCTED</div></div>'
+                        mid_content = (
+                            f'<div style="text-align:center; padding:16px 0;">'
+                            f'{cone_svg}'
+                            f'<div style="font-size:0.8rem; font-weight:800; color:#F43F5E; margin-top:6px; letter-spacing:0.8px;">OBSTRUCTED</div>'
+                            f'<div style="font-size:0.7rem; color:#FDA4AF; margin-top:2px;">Incident Logged</div>'
+                            f'</div>'
+                        )
                     else:
-                        # VACANT: clean stall floor with checkmark, subtle available space visual
-                        mid_content = '<div style="text-align:center; padding:26px 0;"><div style="width:36px; height:36px; border-radius:50%; background:rgba(16,185,129,0.15); display:inline-flex; align-items:center; justify-content:center; color:#10B981; font-size:1.15rem; font-weight:900; margin:0 auto 6px auto;">✓</div><div style="font-size:0.82rem; font-weight:800; color:#10B981; letter-spacing:0.5px;">AVAILABLE</div><div style="font-size:0.72rem; color:#94A3B8;">Ready for vehicle</div></div>'
+                        # VACANT: clean 2.5D stall floor with checkmark and ultrasonic ping indicator
+                        mid_content = (
+                            f'<div style="text-align:center; padding:24px 0;">'
+                            f'<div style="width:40px; height:40px; border-radius:50%; background:rgba(16,185,129,0.15); border:1.5px solid #10B981; display:inline-flex; align-items:center; justify-content:center; color:#10B981; font-size:1.25rem; font-weight:900; margin:0 auto 8px auto; box-shadow:0 0 12px rgba(16,185,129,0.3);">✓</div>'
+                            f'<div style="font-size:0.85rem; font-weight:800; color:#10B981; letter-spacing:0.8px;">AVAILABLE</div>'
+                            f'<div style="font-size:0.72rem; color:#94A3B8; margin-top:2px;">Ultrasonic: Clear</div>'
+                            f'</div>'
+                        )
 
-                    cat_short = s['category'].split(' ')[0]
+                    tooltip_title = f"{s['slot_number']} &#10;Status: {s['status']} &#10;Category: {s['category']} &#10;Assigned: {s.get('registration_number') or 'None'}"
                     stall_card_html = (
-                        f'<div class="st-parking-bay" style="border-top-color:{border_color}; border-left-color:{border_color}; border-right-color:{border_color};">'
+                        f'<div class="st-parking-bay" title="{tooltip_title}" style="border-top-color:{border_color}; border-left-color:{border_color}; border-right-color:{border_color};">'
                         f'<div class="st-wheel-stop"></div>'
                         f'<div style="display:flex; justify-content:space-between; align-items:center;">'
                         f'<span style="font-size:1.15rem; font-weight:800; color:#FFFFFF;">{cat_icon} {s["slot_number"]}</span>'
                         f'<span class="status-badge-{stat_lower}">{s["status"]}</span>'
                         f'</div>'
                         f'{mid_content}'
-                        f'<div style="font-size:0.72rem; color:#94A3B8; border-top:1px dashed #334155; padding-top:4px; display:flex; justify-content:space-between;">'
-                        f'<span>{cat_short}</span>'
-                        f'<span style="color:#22D3EE;">Active IoT</span>'
+                        f'<div style="font-size:0.72rem; color:#94A3B8; border-top:1px dashed #334155; padding-top:6px; display:flex; justify-content:space-between; align-items:center;">'
+                        f'{row_feature_badge}'
+                        f'<span style="color:#22D3EE; font-weight:700;">Active IoT</span>'
                         f'</div>'
                         f'</div>'
                     )
@@ -694,15 +879,15 @@ elif page == "🅿️ Parking Area & Simulation":
         if cat_idx == 0:
             st.markdown("""
             <div class="st-roadway">
-                <span style="font-weight:800; font-size:0.8rem; letter-spacing:1px;">➔ MAIN FACILITY TWO-WAY DRIVEWAY &bull; SPEED LIMIT 10 KM/H ➔</span>
-                <span style="font-size:0.75rem; color:#FBBF24;">PEDESTRIAN WALKWAY</span>
+                <span style="font-weight:800; font-size:0.82rem; letter-spacing:1px; color:#F8FAFC;">➔ MAIN FACILITY TWO-WAY DRIVEWAY &bull; SPEED LIMIT 10 KM/H ➔</span>
+                <span style="font-size:0.75rem; color:#FBBF24; font-weight:700; background:rgba(245,158,11,0.15); padding:3px 10px; border-radius:12px; border:1px solid #F59E0B;">PEDESTRIAN WALKWAY</span>
             </div>
             """, unsafe_allow_html=True)
         elif cat_idx == 1:
             st.markdown("""
             <div class="st-roadway">
-                <span style="font-weight:800; font-size:0.8rem; letter-spacing:1px;">➔ SECONDARY ONE-WAY DRIVEWAY &bull; ROUTE TO EXIT GATE ➔</span>
-                <span style="font-size:0.75rem; color:#38BDF8;">ZEBRA CROSSWAY</span>
+                <span style="font-weight:800; font-size:0.82rem; letter-spacing:1px; color:#F8FAFC;">➔ SECONDARY ONE-WAY DRIVEWAY &bull; ROUTE TO EXIT GATE ➔</span>
+                <span style="font-size:0.75rem; color:#38BDF8; font-weight:700; background:rgba(56,189,248,0.15); padding:3px 10px; border-radius:12px; border:1px solid #38BDF8;">ZEBRA CROSSWAY</span>
             </div>
             """, unsafe_allow_html=True)
 
@@ -716,6 +901,169 @@ elif page == "🅿️ Parking Area & Simulation":
         <span style="color:#22D3EE; font-weight:700; font-size:0.8rem; background:rgba(34,211,238,0.15); padding:2px 8px; border-radius:12px;">● AUTOMATIC RELEASE READY</span>
     </div>
     """, unsafe_allow_html=True)
+
+    # --------------------------------------------------------------------------
+    # Interactive Click Detail Panel: Stall Telemetry & Occupancy Inspector
+    # --------------------------------------------------------------------------
+    st.markdown("---")
+    st.markdown("""
+    <div style="background: linear-gradient(135deg, #111C32 0%, #0B1220 100%); border: 1.5px solid #22D3EE; border-radius: 14px; padding: 16px 20px; margin-top: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.4);">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <div style="width:40px; height:40px; border-radius:10px; background:rgba(34,211,238,0.15); border:1px solid #22D3EE; display:flex; align-items:center; justify-content:center; font-size:1.3rem;">
+                    🔍
+                </div>
+                <div>
+                    <h3 style="color:#FFFFFF; margin:0; font-size:1.15rem; font-weight:800;">Stall Telemetry & Occupancy Inspector</h3>
+                    <p style="color:#94A3B8; margin:0; font-size:0.8rem;">Select any stall to inspect live vehicle telemetry, ultrasonic sensor ping, active permits, and dwell duration</p>
+                </div>
+            </div>
+            <span style="background:rgba(34,211,238,0.15); color:#22D3EE; border:1px solid #22D3EE; padding:4px 12px; border-radius:14px; font-size:0.75rem; font-weight:800;">
+                LIVE TELEMETRY PANEL
+            </span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    slot_options = [f"{s['slot_number']} — {s['category'].split(' ')[0]} ({s['status']})" for s in slots]
+    # Default to first occupied or reserved slot, or first slot
+    default_stall_idx = 0
+    for idx_s, s_obj in enumerate(slots):
+        if s_obj["status"] in ("OCCUPIED", "RESERVED"):
+            default_stall_idx = idx_s
+            break
+
+    chosen_stall_label = st.selectbox(
+        "Choose Parking Bay to Inspect Details:",
+        slot_options,
+        index=default_stall_idx,
+        help="Inspect full backend telemetry and vehicle details for any parking stall."
+    )
+    chosen_slot_code = chosen_stall_label.split(" ")[0]
+    inspected = next((s for s in slots if s["slot_number"] == chosen_slot_code), slots[0])
+
+    p_col1, p_col2, p_col3 = st.columns([1, 1.2, 1.1])
+
+    with p_col1:
+        st.markdown(f"##### 📍 Bay Visual: **{inspected['slot_number']}**")
+        insp_status = inspected["status"]
+        if insp_status == "OCCUPIED":
+            st.markdown(f"""
+            <div style="background:#0F172A; border-radius:10px; padding:16px; text-align:center; border:2px solid #F43F5E;">
+                {get_st_topdown_vehicle_svg(inspected['id'])}
+                <div style="margin-top:8px;">
+                    <span class="plate-badge">{inspected['registration_number'] or 'PARKED'}</span>
+                </div>
+                <div style="color:#F43F5E; font-weight:800; font-size:0.82rem; margin-top:6px;">● OCCUPIED & BILLING</div>
+            </div>
+            """, unsafe_allow_html=True)
+        elif insp_status == "RESERVED":
+            st.markdown(f"""
+            <div style="background:#0F172A; border-radius:10px; padding:28px 16px; text-align:center; border:2px solid #F59E0B;">
+                <div style="font-size:3rem; margin-bottom:8px;">🟡</div>
+                <div style="color:#F59E0B; font-weight:800; font-size:0.95rem;">VEHICLE IN TRANSIT</div>
+                <div style="margin-top:6px;">
+                    <span class="plate-badge" style="background:#D97706;">{inspected['registration_number'] or 'PERMIT ISSUED'}</span>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+        elif insp_status == "BLOCKED":
+            st.markdown(f"""
+            <div style="background:#0F172A; border-radius:10px; padding:24px 16px; text-align:center; border:2px solid #64748B;">
+                {get_st_cone_svg()}
+                <div style="color:#F43F5E; font-weight:800; font-size:0.95rem; margin-top:8px;">STALL OBSTRUCTED</div>
+                <div style="color:#CBD5E1; font-size:0.78rem; margin-top:4px;">Physical obstacle detected</div>
+            </div>
+            """, unsafe_allow_html=True)
+        else:
+            st.markdown(f"""
+            <div style="background:#0F172A; border-radius:10px; padding:28px 16px; text-align:center; border:2px solid #10B981;">
+                <div style="width:48px; height:48px; border-radius:50%; background:rgba(16,185,129,0.2); border:2px solid #10B981; display:inline-flex; align-items:center; justify-content:center; color:#10B981; font-size:1.5rem; font-weight:900; margin-bottom:8px;">✓</div>
+                <div style="color:#10B981; font-weight:800; font-size:1rem;">STALL VACANT</div>
+                <div style="color:#94A3B8; font-size:0.8rem; margin-top:4px;">Available for automatic dispatch</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+    with p_col2:
+        st.markdown(f"##### 🪪 Vehicle & Session Telemetry")
+        reg_display = inspected.get("registration_number") or "None (Unoccupied)"
+        ticket_display = inspected.get("ticket_id") or "None (No active ticket)"
+        entry_time_display = inspected.get("entry_time") or "N/A"
+        parked_time_display = inspected.get("parked_start_time") or "N/A"
+
+        st.markdown(f"""
+        <div style="background:#111C32; border-radius:10px; padding:16px; border:1px solid #1E293B;">
+            <div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #1E293B;">
+                <span style="color:#94A3B8; font-size:0.85rem;">Stall Designation:</span>
+                <span style="color:#FFFFFF; font-weight:700; font-size:0.88rem;">{inspected['slot_number']} ({inspected['category']})</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #1E293B;">
+                <span style="color:#94A3B8; font-size:0.85rem;">Live Status:</span>
+                <span class="status-badge-{inspected['status'].lower()}">{inspected['status']}</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #1E293B;">
+                <span style="color:#94A3B8; font-size:0.85rem;">Vehicle Registration:</span>
+                <span style="color:#22D3EE; font-weight:800; font-size:0.88rem;">{reg_display}</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #1E293B;">
+                <span style="color:#94A3B8; font-size:0.85rem;">Permit Ticket ID:</span>
+                <span style="color:#FBBF24; font-family:monospace; font-size:0.85rem;">{ticket_display}</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #1E293B;">
+                <span style="color:#94A3B8; font-size:0.85rem;">Gate Entry Timestamp:</span>
+                <span style="color:#E2E8F0; font-size:0.82rem;">{entry_time_display}</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; padding:6px 0;">
+                <span style="color:#94A3B8; font-size:0.85rem;">Bay Docked Timestamp:</span>
+                <span style="color:#E2E8F0; font-size:0.82rem;">{parked_time_display}</span>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with p_col3:
+        st.markdown(f"##### 📡 IoT Ultrasonic Hardware")
+        if inspected["status"] == "OCCUPIED":
+            sensor_distance = "0.38 m (Chassis Detected)"
+            sensor_echo = "HIGH_CONFIDENCE_OCCUPIED"
+        elif inspected["status"] == "RESERVED":
+            sensor_distance = "2.68 m (Clear Floor, Awaiting Docking)"
+            sensor_echo = "RESERVED_INTERLOCK_ACTIVE"
+        elif inspected["status"] == "BLOCKED":
+            sensor_distance = "0.85 m (Foreign Object Obstruction)"
+            sensor_echo = "SAFETY_INCIDENT_FLAGGED"
+        else:
+            sensor_distance = "2.70 m (Clear Floor Surface)"
+            sensor_echo = "VACANT_READY_FOR_DISPATCH"
+
+        feature_info = (
+            "♿ Extra-wide 3.6m Bay &bull; Direct Elevator Access (12m)" if inspected["category"] == "Disabled Parking"
+            else ("⚡ Level 2 50kW DC Fast Station &bull; 400V 125A Interlock Ready" if inspected["category"] == "EV Charging Parking"
+            else "🚗 Standard 2.5m &times; 5.0m Stall &bull; Sedan/SUV Ready")
+        )
+
+        st.markdown(f"""
+        <div style="background:#111C32; border-radius:10px; padding:16px; border:1px solid #1E293B;">
+            <div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #1E293B;">
+                <span style="color:#94A3B8; font-size:0.85rem;">Transceiver Ping:</span>
+                <span style="color:#10B981; font-weight:700; font-size:0.85rem;">{sensor_distance}</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #1E293B;">
+                <span style="color:#94A3B8; font-size:0.85rem;">Telemetry Echo:</span>
+                <span style="color:#38BDF8; font-family:monospace; font-size:0.75rem;">{sensor_echo}</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #1E293B;">
+                <span style="color:#94A3B8; font-size:0.85rem;">Sampling Freq:</span>
+                <span style="color:#FFFFFF; font-size:0.85rem;">40 kHz (Sampling Rate 10 Hz)</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #1E293B;">
+                <span style="color:#94A3B8; font-size:0.85rem;">Active Incidents:</span>
+                <span style="color:{'#F43F5E' if inspected.get('alert_count', 0) > 0 else '#10B981'}; font-weight:800; font-size:0.85rem;">{inspected.get('alert_count', 0)} Active Alerts</span>
+            </div>
+            <div style="padding:6px 0; font-size:0.75rem; color:#94A3B8; border-top:1px dashed #334155; margin-top:4px;">
+                {feature_info}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
 # ==============================================================================
 # PAGE 3: GUARD COMMAND CENTER

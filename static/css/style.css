@@ -651,7 +651,7 @@ body {
   border-left: 3.5px solid #FFFFFF;
   border-right: 3.5px solid #FFFFFF;
   border-bottom: 2.5px dashed #CBD5E1;
-  border-radius: 10px;
+  border-radius: 12px;
   min-height: 245px;
   padding: 0.85rem 0.75rem;
   display: flex;
@@ -659,13 +659,14 @@ body {
   justify-content: space-between;
   position: relative;
   cursor: pointer;
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
-  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08), 0 1px 3px rgba(15, 23, 42, 0.04);
+  transform: perspective(800px) rotateX(4deg);
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.22s ease;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.09), 0 1px 3px rgba(15, 23, 42, 0.04);
 }
 
 .slot-item:hover, .parking-bay:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.16), 0 3px 8px rgba(15, 23, 42, 0.08);
+  transform: perspective(800px) rotateX(0deg) translateY(-6px) scale(1.02);
+  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.2), 0 0 0 2px #22D3EE, 0 0 16px rgba(34, 211, 238, 0.35);
   z-index: 10;
 }
 
