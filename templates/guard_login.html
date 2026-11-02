@@ -1,22 +1,24 @@
 {% extends "base.html" %}
 
-{% block title %}SmartPark AI - Guard Authentication{% endblock %}
+{% block title %}SmartPark AI - Guard Security Authentication{% endblock %}
 
 {% block content %}
-<div style="max-width: 440px; margin: 3rem auto;">
-  <div class="card" style="border-top: 4px solid #f59e0b;">
-    <div style="text-align: center; margin-bottom: 1.5rem;">
-      <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🛡️</div>
-      <h2 style="font-size: 1.45rem; font-weight: 700;">Guard Access Portal</h2>
-      <p style="color: var(--text-secondary); font-size: 0.88rem; margin-top: 0.25rem;">
-        Authenticated personnel only. Secure station management.
+<div style="max-width: 460px; margin: 3.5rem auto;">
+  <div class="card" style="border-top: 4px solid #22D3EE; box-shadow: var(--shadow-lg);">
+    <div style="text-align: center; margin-bottom: 1.75rem;">
+      <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(34, 211, 238, 0.15); display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin: 0 auto 1rem auto; border: 1px solid rgba(34, 211, 238, 0.3);">
+        🛡️
+      </div>
+      <h2 style="font-size: 1.6rem; font-weight: 800; color: #FFFFFF; letter-spacing: -0.5px;">Guard Station Access</h2>
+      <p style="color: var(--text-secondary); font-size: 0.88rem; margin-top: 0.35rem;">
+        Authenticated personnel only &bull; Command & Security Console
       </p>
     </div>
 
     <form id="guardLoginForm" onsubmit="return false;">
       <div class="form-group">
-        <label class="form-label" for="usernameInput">Guard Username</label>
-        <input type="text" id="usernameInput" class="form-input" placeholder="e.g. guard_admin" value="guard_admin" required>
+        <label class="form-label" for="usernameInput">Security Officer Username</label>
+        <input type="text" id="usernameInput" class="form-input" placeholder="e.g. guard_admin" value="guard_admin" required autofocus>
       </div>
 
       <div class="form-group">
@@ -24,15 +26,15 @@
         <input type="password" id="passwordInput" class="form-input" placeholder="Enter password" value="GuardPass@2026" required>
       </div>
 
-      <div id="loginErrorMsg" style="display: none; padding: 0.75rem; border-radius: 6px; background-color: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #fca5a5; font-size: 0.88rem; margin-bottom: 1.25rem;"></div>
+      <div id="loginErrorMsg" style="display: none; padding: 0.75rem 1rem; border-radius: 6px; background-color: rgba(244, 63, 94, 0.15); border: 1px solid #F43F5E; color: #FB7185; font-size: 0.88rem; margin-bottom: 1.25rem;"></div>
 
-      <button type="button" id="btnLogin" class="btn btn-primary" style="width: 100%; padding: 0.85rem;">
-        Authenticate & Enter Dashboard
+      <button type="button" id="btnLogin" class="btn btn-primary btn-block" style="padding: 0.85rem; font-size: 1rem;">
+        🔒 Authenticate & Access Command Center
       </button>
 
-      <div style="text-align: center; margin-top: 1rem; font-size: 0.8rem; color: var(--text-muted);">
-        Default local demonstration credentials:<br>
-        <code>guard_admin</code> / <code>GuardPass@2026</code>
+      <div style="text-align: center; margin-top: 1.25rem; font-size: 0.82rem; color: var(--text-muted); background: #0E1729; padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border-subtle);">
+        Demo Officer Credentials:<br>
+        Username: <strong style="color: #22D3EE;">guard_admin</strong> &bull; Password: <strong style="color: #22D3EE;">GuardPass@2026</strong>
       </div>
     </form>
   </div>
@@ -45,12 +47,16 @@ document.getElementById("btnLogin").addEventListener("click", async () => {
   const u = document.getElementById("usernameInput").value.trim();
   const p = document.getElementById("passwordInput").value.trim();
   const errBox = document.getElementById("loginErrorMsg");
+  const btn = document.getElementById("btnLogin");
 
   if (!u || !p) {
     errBox.textContent = "Username and password are required.";
     errBox.style.display = "block";
     return;
   }
+
+  btn.disabled = true;
+  btn.textContent = "Verifying Credentials...";
 
   try {
     const res = await fetch("/api/guard/login", {
@@ -60,17 +66,22 @@ document.getElementById("btnLogin").addEventListener("click", async () => {
     });
     const data = await res.json();
     if (data.success) {
-      window.location.href = "/guard";
+      showToast("Authentication successful! Welcome, Officer " + data.user, "success");
+      setTimeout(() => { window.location.href = "/guard"; }, 400);
     } else {
+      btn.disabled = false;
+      btn.textContent = "🔒 Authenticate & Access Command Center";
       errBox.textContent = data.message || "Invalid credentials.";
       errBox.style.display = "block";
+      showToast(data.message || "Authentication failed", "error");
     }
   } catch (err) {
-    console.error("Login error:", err);
+    btn.disabled = false;
+    btn.textContent = "🔒 Authenticate & Access Command Center";
     errBox.textContent = "Network error during authentication.";
     errBox.style.display = "block";
+    showToast("Network error connecting to auth server", "error");
   }
 });
 </script>
 {% endblock %}
-

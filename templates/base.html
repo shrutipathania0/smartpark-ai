@@ -3,25 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}SmartPark AI - Intelligent Parking Facility{% endblock %}</title>
+  <title>{% block title %}SmartPark AI - Autonomous Smart Parking Facility{% endblock %}</title>
   <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🅿️</text></svg>">
 </head>
 <body>
   <nav class="navbar">
     <a href="/" class="nav-brand">
       <span class="logo-badge">SmartPark</span>
-      <span>AI</span>
+      <span style="color: #22D3EE;">AI</span>
     </a>
     <ul class="nav-links">
-      <li><a href="/" class="{% if request.path == '/' %}active{% endif %}">Home</a></li>
-      <li><a href="/entry" class="{% if request.path == '/entry' %}active{% endif %}">Entry Gate</a></li>
-      <li><a href="/parking" class="{% if request.path == '/parking' %}active{% endif %}">Parking Area</a></li>
-      <li><a href="/exit" class="{% if request.path == '/exit' %}active{% endif %}">Exit Gate</a></li>
-      <li><a href="/guard" class="{% if '/guard' in request.path %}active{% endif %}">Guard Dashboard</a></li>
+      <li><a href="/" class="{% if request.path == '/' %}active{% endif %}"><span>🏠</span> Home</a></li>
+      <li><a href="/entry" class="{% if request.path == '/entry' %}active{% endif %}"><span>🚘</span> Entry Gate</a></li>
+      <li><a href="/parking" class="{% if request.path == '/parking' %}active{% endif %}"><span>🅿️</span> Parking Map</a></li>
+      <li><a href="/exit" class="{% if request.path == '/exit' %}active{% endif %}"><span>🏁</span> Exit Gate</a></li>
+      <li><a href="/guard" class="{% if '/guard' in request.path %}active{% endif %}"><span>🛡️</span> Guard Command Center</a></li>
     </ul>
     <div class="nav-status">
       <span class="status-dot"></span>
-      <span id="systemStatusText">Local Facility Active</span>
+      <span id="systemStatusText">AI Facility Online</span>
     </div>
   </nav>
 
@@ -29,12 +30,15 @@
     {% block content %}{% endblock %}
   </main>
 
-  <footer style="text-align: center; padding: 1.5rem; font-size: 0.85rem; color: var(--text-muted); border-top: 1px solid var(--border-color);">
-    SmartPark AI &copy; 2026 &bull; IoT Parking Management & Computer Vision ANPR System
+  <footer style="text-align: center; padding: 1.5rem; font-size: 0.85rem; color: var(--text-muted); border-top: 1px solid var(--border-subtle); background-color: #0B1220;">
+    <div style="display: flex; justify-content: space-between; align-items: center; max-width: 1380px; margin: 0 auto; padding: 0 1rem; flex-wrap: wrap; gap: 0.5rem;">
+      <div><strong>SmartPark AI</strong> &bull; Autonomous IoT Parking Facility & Computer Vision ANPR</div>
+      <div>Local Engine: YOLOv8n + EasyOCR + SQLite3 &bull; Version 2.0</div>
+    </div>
   </footer>
 
+  <div id="toastContainer"></div>
   <script src="/static/js/main.js"></script>
   {% block scripts %}{% endblock %}
 </body>
 </html>
-

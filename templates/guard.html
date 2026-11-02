@@ -1,139 +1,570 @@
 {% extends "base.html" %}
 
-{% block title %}SmartPark AI - Guard Security Dashboard{% endblock %}
+{% block title %}SmartPark AI - Guard Command Center{% endblock %}
 
 {% block content %}
-<div class="page-header">
-  <div>
-    <h1 class="page-title">Guard Station Dashboard</h1>
-    <p class="page-subtitle">Security Operations, Telemetry Analytics & Pricing Management</p>
-  </div>
-  <div style="display: flex; gap: 0.75rem; align-items: center;">
-    <div style="background-color: var(--bg-card); padding: 0.4rem 0.85rem; border-radius: 8px; font-size: 0.88rem; border: 1px solid var(--border-color);">
-      Guard Officer: <strong style="color: #38bdf8;">{{ guard_user }}</strong>
+<div style="display: flex; gap: 1.5rem; align-items: flex-start;">
+  <!-- Sidebar Navigation -->
+  <aside style="width: 250px; background-color: #0B1220; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1.25rem 0.85rem; flex-shrink: 0; box-shadow: var(--shadow-sm); position: sticky; top: 85px;">
+    <div style="padding: 0 0.5rem 1rem 0.5rem; border-bottom: 1px solid var(--border-subtle); margin-bottom: 1rem;">
+      <div style="font-size: 0.78rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 1px;">Control Panel</div>
+      <div style="font-size: 1.05rem; font-weight: 800; color: #22D3EE; margin-top: 0.2rem;">Guard Station</div>
     </div>
-    <button id="btnLogout" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">Logout</button>
+
+    <nav style="display: flex; flex-direction: column; gap: 0.35rem;">
+      <button class="btn btn-secondary active-nav" id="navBtn-overview" onclick="switchSection('overview')" style="justify-content: flex-start; text-align: left; width: 100%; border: none;">
+        <span>📊</span> <span>Overview & KPIs</span>
+      </button>
+      <button class="btn btn-secondary" id="navBtn-parking" onclick="switchSection('parking')" style="justify-content: flex-start; text-align: left; width: 100%; border: none;">
+        <span>🅿️</span> <span>Live Parking Map</span>
+      </button>
+      <button class="btn btn-secondary" id="navBtn-alerts" onclick="switchSection('alerts')" style="justify-content: flex-start; text-align: left; width: 100%; border: none;">
+        <span>🚨</span> <span>Alerts & Incidents</span>
+        <span id="sidebarAlertBadge" class="badge badge-occupied" style="margin-left: auto; display: none;">0</span>
+      </button>
+      <button class="btn btn-secondary" id="navBtn-sessions" onclick="switchSection('sessions')" style="justify-content: flex-start; text-align: left; width: 100%; border: none;">
+        <span>🚘</span> <span>Vehicle Sessions</span>
+      </button>
+      <button class="btn btn-secondary" id="navBtn-pricing" onclick="switchSection('pricing')" style="justify-content: flex-start; text-align: left; width: 100%; border: none;">
+        <span>💲</span> <span>Pricing Tariff</span>
+      </button>
+      <button class="btn btn-secondary" id="navBtn-simulation" onclick="switchSection('simulation')" style="justify-content: flex-start; text-align: left; width: 100%; border: none;">
+        <span>🔬</span> <span>Simulation Lab</span>
+      </button>
+      <button class="btn btn-secondary" id="navBtn-health" onclick="switchSection('health')" style="justify-content: flex-start; text-align: left; width: 100%; border: none;">
+        <span>🖥️</span> <span>System Health</span>
+      </button>
+    </nav>
+
+    <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border-subtle);">
+      <button id="btnLogout" class="btn btn-danger btn-block" style="padding: 0.5rem; font-size: 0.85rem;" onclick="logoutGuard()">
+        <span>🔒</span> <span>Logout Guard</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <div style="flex: 1; min-width: 0;">
+    <!-- Dashboard Header -->
+    <div class="page-header" style="background-color: var(--bg-surface); padding: 1.25rem 1.5rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+      <div>
+        <div style="display: flex; align-items: center; gap: 0.6rem;">
+          <h1 class="page-title" style="font-size: 1.5rem; margin: 0;">Smart Parking Command Center</h1>
+          <span class="badge badge-vacant" style="font-size: 0.75rem;">LIVE STREAMING</span>
+        </div>
+        <p class="page-subtitle" style="font-size: 0.88rem; margin-top: 0.2rem;">
+          Real-time IoT Telemetry &bull; Automated ANPR Security &bull; Autonomous Facility Controls
+        </p>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+        <!-- Clock -->
+        <div style="text-align: right;">
+          <div id="liveClock" style="font-family: var(--font-mono); font-size: 1.1rem; font-weight: 800; color: #22D3EE;">--:--:--</div>
+          <div id="liveDate" style="font-size: 0.78rem; color: var(--text-muted);">--</div>
+        </div>
+
+        <!-- Guard Badge -->
+        <div style="background-color: #0B1220; padding: 0.45rem 0.95rem; border-radius: var(--radius-pill); border: 1px solid var(--border-subtle); display: flex; align-items: center; gap: 0.5rem; font-size: 0.88rem;">
+          <span style="color: #38BDF8;">👮</span>
+          <span>Officer: <strong style="color: #22D3EE;">{{ guard_user }}</strong></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================================================================
+         SECTION 1: OVERVIEW & KPIS
+         ========================================================================= -->
+    <div id="section-overview" class="guard-section">
+      <!-- 8 Real Statistics Cards (Clickable to filter) -->
+      <div class="grid-4" style="margin-bottom: 1.5rem;">
+        <div class="stat-card" onclick="filterParkingView('ALL')" title="View all facility stalls">
+          <div class="stat-header">
+            <span class="stat-label">Total Stalls</span>
+            <span class="stat-icon" style="background: rgba(34, 211, 238, 0.15); color: #22D3EE;">🅿️</span>
+          </div>
+          <div class="stat-value" id="kpiTotalSlots">15</div>
+          <div class="stat-caption">Configured capacity (100%)</div>
+        </div>
+
+        <div class="stat-card" onclick="filterParkingView('VACANT')" title="Click to view vacant spaces">
+          <div class="stat-header">
+            <span class="stat-label">Vacant Stalls</span>
+            <span class="stat-icon" style="background: var(--status-vacant-bg); color: var(--status-vacant);">🟢</span>
+          </div>
+          <div class="stat-value" style="color: #34D399;" id="kpiVacantSlots">--</div>
+          <div class="stat-caption">Available for immediate entry</div>
+        </div>
+
+        <div class="stat-card" onclick="filterParkingView('RESERVED')" title="Click to view reserved spaces">
+          <div class="stat-header">
+            <span class="stat-label">Reserved Stalls</span>
+            <span class="stat-icon" style="background: var(--status-reserved-bg); color: var(--status-reserved);">🟡</span>
+          </div>
+          <div class="stat-value" style="color: #FBBF24;" id="kpiReservedSlots">--</div>
+          <div class="stat-caption">Ticket issued, in transit</div>
+        </div>
+
+        <div class="stat-card" onclick="filterParkingView('OCCUPIED')" title="Click to view occupied spaces">
+          <div class="stat-header">
+            <span class="stat-label">Occupied Stalls</span>
+            <span class="stat-icon" style="background: var(--status-occupied-bg); color: var(--status-occupied);">🔴</span>
+          </div>
+          <div class="stat-value" style="color: #FB7185;" id="kpiOccupiedSlots">--</div>
+          <div class="stat-caption">Vehicle parked, billing active</div>
+        </div>
+
+        <div class="stat-card" onclick="filterParkingView('BLOCKED')" title="Click to view obstructed spaces">
+          <div class="stat-header">
+            <span class="stat-label">Blocked Stalls</span>
+            <span class="stat-icon" style="background: var(--status-blocked-bg); color: var(--status-blocked);">⚪</span>
+          </div>
+          <div class="stat-value" style="color: #94A3B8;" id="kpiBlockedSlots">0</div>
+          <div class="stat-caption">Physical obstacle detected</div>
+        </div>
+
+        <div class="stat-card" onclick="switchSection('sessions')" title="View active vehicle sessions">
+          <div class="stat-header">
+            <span class="stat-label">Active Sessions</span>
+            <span class="stat-icon" style="background: rgba(59, 130, 246, 0.15); color: #3B82F6;">🚘</span>
+          </div>
+          <div class="stat-value" style="color: #38BDF8;" id="kpiActiveSessions">0</div>
+          <div class="stat-caption">Total vehicles inside facility</div>
+        </div>
+
+        <div class="stat-card" onclick="switchSection('alerts')" title="View unresolved alerts">
+          <div class="stat-header">
+            <span class="stat-label">Unresolved Alerts</span>
+            <span class="stat-icon" style="background: rgba(244, 63, 94, 0.15); color: #F43F5E;">🚨</span>
+          </div>
+          <div class="stat-value" style="color: #F43F5E;" id="kpiOpenAlerts">0</div>
+          <div class="stat-caption">Requires officer attention</div>
+        </div>
+
+        <div class="stat-card" onclick="switchSection('sessions')" title="View today's traffic">
+          <div class="stat-header">
+            <span class="stat-label">Today's Revenue</span>
+            <span class="stat-icon" style="background: rgba(16, 185, 129, 0.15); color: #10B981;">₹</span>
+          </div>
+          <div class="stat-value" style="color: #10B981;" id="kpiRevenue">₹0.00</div>
+          <div class="stat-caption" id="kpiTrafficSummary">0 entries &bull; 0 exits today</div>
+        </div>
+      </div>
+
+      <!-- Occupancy Chart & Live Activity Feed -->
+      <div class="grid-2" style="margin-bottom: 1.5rem;">
+        <!-- Occupancy Progress Visualization -->
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3 class="card-title" style="margin: 0;">Facility Occupancy Overview</h3>
+            <span id="occupancyRateBadge" class="badge badge-vacant">0% Occupied</span>
+          </div>
+
+          <div style="display: flex; align-items: center; justify-content: center; gap: 2rem; padding: 1rem 0;">
+            <!-- Circular Donut SVG -->
+            <div style="position: relative; width: 160px; height: 160px;">
+              <svg viewBox="0 0 36 36" style="width: 100%; height: 100%; transform: rotate(-90deg);">
+                <!-- Background track -->
+                <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#16243F" stroke-width="3.8"/>
+                <!-- Occupied segment -->
+                <path id="donutOccupied" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#F43F5E" stroke-width="3.8" stroke-dasharray="0, 100"/>
+                <!-- Reserved segment -->
+                <path id="donutReserved" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#F59E0B" stroke-width="3.8" stroke-dasharray="0, 100"/>
+                <!-- Vacant segment -->
+                <path id="donutVacant" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#10B981" stroke-width="3.8" stroke-dasharray="100, 100"/>
+              </svg>
+              <div style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none;">
+                <span id="occupancyPercentCenter" style="font-size: 1.6rem; font-weight: 900; color: #FFFFFF;">0%</span>
+                <span style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase;">Occupied</span>
+              </div>
+            </div>
+
+            <!-- Breakdown list -->
+            <div style="display: flex; flex-direction: column; gap: 0.65rem; font-size: 0.88rem;">
+              <div style="display: flex; align-items: center; gap: 0.6rem;">
+                <span style="width: 12px; height: 12px; border-radius: 3px; background-color: #10B981;"></span>
+                <span style="color: var(--text-secondary);">Vacant Stalls:</span>
+                <strong id="donutLabelVacant" style="color: #FFFFFF; margin-left: auto;">15</strong>
+              </div>
+              <div style="display: flex; align-items: center; gap: 0.6rem;">
+                <span style="width: 12px; height: 12px; border-radius: 3px; background-color: #F59E0B;"></span>
+                <span style="color: var(--text-secondary);">Reserved Stalls:</span>
+                <strong id="donutLabelReserved" style="color: #FFFFFF; margin-left: auto;">0</strong>
+              </div>
+              <div style="display: flex; align-items: center; gap: 0.6rem;">
+                <span style="width: 12px; height: 12px; border-radius: 3px; background-color: #F43F5E;"></span>
+                <span style="color: var(--text-secondary);">Occupied Stalls:</span>
+                <strong id="donutLabelOccupied" style="color: #FFFFFF; margin-left: auto;">0</strong>
+              </div>
+              <div style="display: flex; align-items: center; gap: 0.6rem;">
+                <span style="width: 12px; height: 12px; border-radius: 3px; background-color: #64748B;"></span>
+                <span style="color: var(--text-secondary);">Blocked Stalls:</span>
+                <strong id="donutLabelBlocked" style="color: #FFFFFF; margin-left: auto;">0</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Activity Feed -->
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3 class="card-title" style="margin: 0;">Live Facility Activity Feed</h3>
+            <button class="btn btn-secondary" style="padding: 0.25rem 0.65rem; font-size: 0.8rem;" onclick="loadRecentActivity()">Refresh Feed</button>
+          </div>
+          <div id="activityFeedList" style="display: flex; flex-direction: column; gap: 0.6rem; max-height: 240px; overflow-y: auto; padding-right: 0.35rem;">
+            <div style="text-align: center; color: var(--text-muted); padding: 1rem;">Loading recent events...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================================================================
+         SECTION 2: LIVE PARKING MAP
+         ========================================================================= -->
+    <div id="section-parking" class="guard-section" style="display: none;">
+      <div class="card" style="margin-bottom: 1rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <h3 class="card-title" style="margin: 0;">Interactive Spatial Parking Map</h3>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem;">Live sensor grid showing stall status, vehicle allocations, and telemetry</p>
+          </div>
+          <!-- Filter Controls -->
+          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <button class="btn btn-secondary active" id="filterBtn-ALL" onclick="applyParkingFilter('ALL')">All Stalls</button>
+            <button class="btn btn-secondary" id="filterBtn-VACANT" onclick="applyParkingFilter('VACANT')">🟢 Vacant</button>
+            <button class="btn btn-secondary" id="filterBtn-RESERVED" onclick="applyParkingFilter('RESERVED')">🟡 Reserved</button>
+            <button class="btn btn-secondary" id="filterBtn-OCCUPIED" onclick="applyParkingFilter('OCCUPIED')">🔴 Occupied</button>
+            <button class="btn btn-secondary" id="filterBtn-BLOCKED" onclick="applyParkingFilter('BLOCKED')">⚪ Blocked</button>
+          </div>
+        </div>
+
+        <!-- Lane Marking -->
+        <div class="lane-indicator">&darr; INBOUND ENTRY DRIVEWAY &bull; SPEED LIMIT 10 KM/H &bull; SMART SENSORS ACTIVE &darr;</div>
+
+        <!-- Accessible Parking Row -->
+        <div style="margin-bottom: 1.5rem;">
+          <div style="font-size: 0.95rem; font-weight: 700; color: #38BDF8; margin-bottom: 0.65rem; display: flex; align-items: center; gap: 0.5rem;">
+            <span>♿</span> <span>Priority Accessible Stalls (Near Main Kiosk)</span>
+          </div>
+          <div class="slots-grid" id="guardGridDisabled"></div>
+        </div>
+
+        <!-- EV Charging Row -->
+        <div style="margin-bottom: 1.5rem;">
+          <div style="font-size: 0.95rem; font-weight: 700; color: #10B981; margin-bottom: 0.65rem; display: flex; align-items: center; gap: 0.5rem;">
+            <span>⚡</span> <span>EV Fast-Charging Stalls (22kW AC Chargers)</span>
+          </div>
+          <div class="slots-grid" id="guardGridEV"></div>
+        </div>
+
+        <!-- Normal Stalls Row -->
+        <div>
+          <div style="font-size: 0.95rem; font-weight: 700; color: #94A3B8; margin-bottom: 0.65rem; display: flex; align-items: center; gap: 0.5rem;">
+            <span>🚗</span> <span>Standard Vehicle Stalls</span>
+          </div>
+          <div class="slots-grid" id="guardGridNormal"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================================================================
+         SECTION 3: ALERTS & INCIDENTS (High Priority Component)
+         ========================================================================= -->
+    <div id="section-alerts" class="guard-section" style="display: none;">
+      <!-- Alert Summary Cards -->
+      <div class="grid-4" style="margin-bottom: 1.25rem;">
+        <div class="card" style="padding: 1rem; border-left: 4px solid #38BDF8; cursor: pointer;" onclick="setAlertStatusFilter('ALL')">
+          <div style="font-size: 0.78rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Total Incidents</div>
+          <div style="font-size: 1.8rem; font-weight: 900; color: #FFFFFF;" id="alertSummaryTotal">0</div>
+          <div style="font-size: 0.75rem; color: var(--text-muted);">Recorded facility events</div>
+        </div>
+
+        <div class="card" style="padding: 1rem; border-left: 4px solid #F59E0B; cursor: pointer;" onclick="setAlertStatusFilter('NEW')">
+          <div style="font-size: 0.78rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">New / Open</div>
+          <div style="font-size: 1.8rem; font-weight: 900; color: #F59E0B;" id="alertSummaryNew">0</div>
+          <div style="font-size: 0.75rem; color: var(--text-muted);">Awaiting acknowledgement</div>
+        </div>
+
+        <div class="card" style="padding: 1rem; border-left: 4px solid #3B82F6; cursor: pointer;" onclick="setAlertStatusFilter('IN_PROGRESS')">
+          <div style="font-size: 0.78rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">In Progress</div>
+          <div style="font-size: 1.8rem; font-weight: 900; color: #38BDF8;" id="alertSummaryInProgress">0</div>
+          <div style="font-size: 0.75rem; color: var(--text-muted);">Acknowledged by guard</div>
+        </div>
+
+        <div class="card" style="padding: 1rem; border-left: 4px solid #10B981; cursor: pointer;" onclick="setAlertStatusFilter('RESOLVED')">
+          <div style="font-size: 0.78rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Resolved</div>
+          <div style="font-size: 1.8rem; font-weight: 900; color: #10B981;" id="alertSummaryResolved">0</div>
+          <div style="font-size: 0.75rem; color: var(--text-muted);">Closed with resolution notes</div>
+        </div>
+      </div>
+
+      <!-- Filter & Search Controls -->
+      <div class="card" style="margin-bottom: 1.25rem; padding: 1rem 1.25rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+          <!-- Status Tabs -->
+          <div style="display: flex; gap: 0.35rem; flex-wrap: wrap;">
+            <button class="btn btn-secondary active" id="alertFilter-ALL" onclick="setAlertStatusFilter('ALL')">All</button>
+            <button class="btn btn-secondary" id="alertFilter-NEW" onclick="setAlertStatusFilter('NEW')">New (Open)</button>
+            <button class="btn btn-secondary" id="alertFilter-IN_PROGRESS" onclick="setAlertStatusFilter('IN_PROGRESS')">In Progress</button>
+            <button class="btn btn-secondary" id="alertFilter-RESOLVED" onclick="setAlertStatusFilter('RESOLVED')">Resolved History</button>
+          </div>
+
+          <!-- Search and Sorting -->
+          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
+            <input type="text" id="alertSearchInput" class="form-input" placeholder="Search plate, slot, or incident..." style="width: 240px; padding: 0.45rem 0.85rem; font-size: 0.85rem;" oninput="debounceAlertSearch()">
+            
+            <select id="alertSeveritySelect" class="form-input" style="width: 140px; padding: 0.45rem 0.75rem; font-size: 0.85rem;" onchange="loadAlerts()">
+              <option value="ALL">All Severities</option>
+              <option value="CRITICAL">Critical</option>
+              <option value="HIGH">High</option>
+              <option value="MEDIUM">Medium</option>
+              <option value="LOW">Low</option>
+            </select>
+
+            <select id="alertSortSelect" class="form-input" style="width: 150px; padding: 0.45rem 0.75rem; font-size: 0.85rem;" onchange="loadAlerts()">
+              <option value="newest">Newest First</option>
+              <option value="oldest">Oldest First</option>
+              <option value="severity">Highest Severity</option>
+              <option value="recently_resolved">Recently Resolved</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Alerts Cards List -->
+      <div id="alertsCardsContainer">
+        <div style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading security incidents...</div>
+      </div>
+    </div>
+
+    <!-- =========================================================================
+         SECTION 4: VEHICLE SESSIONS & AUDIT
+         ========================================================================= -->
+    <div id="section-sessions" class="guard-section" style="display: none;">
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+          <div>
+            <h3 class="card-title" style="margin: 0;">Vehicle Parking Sessions Audit</h3>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem;">Live session tracking, entry/exit timestamps, and billed tariffs</p>
+          </div>
+          <button class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" onclick="loadSessions()">Refresh Sessions</button>
+        </div>
+
+        <div class="table-wrapper">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Ticket ID</th>
+                <th>Registration</th>
+                <th>Category</th>
+                <th>Slot</th>
+                <th>Entry Time</th>
+                <th>Parked Start</th>
+                <th>Exit Time</th>
+                <th>Status</th>
+                <th>Final Fee</th>
+              </tr>
+            </thead>
+            <tbody id="sessionsTableBody">
+              <tr><td colspan="9" style="text-align: center; color: var(--text-muted);">Loading sessions...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================================================================
+         SECTION 5: PRICING MANAGEMENT
+         ========================================================================= -->
+    <div id="section-pricing" class="guard-section" style="display: none;">
+      <div class="card" style="margin-bottom: 1.5rem;">
+        <h3 class="card-title">Dynamic Facility Pricing Tariff Rules</h3>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem;">
+          &bull; <strong>Snapshot Preservation Rule:</strong> Ongoing sessions maintain their entry pricing policy. Updates affect future incoming vehicles.<br>
+          &bull; <strong>Standard Tariff:</strong> First 60 mins free + 10 mins grace (70 mins total free). Then configurable rate per started block.
+        </p>
+
+        <div class="grid-3" id="pricingCardsGrid" style="margin-top: 1.25rem;">
+          <!-- Dynamically injected -->
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================================================================
+         SECTION 6: SIMULATION LAB
+         ========================================================================= -->
+    <div id="section-simulation" class="guard-section" style="display: none;">
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <div>
+            <h3 class="card-title" style="margin: 0; color: #22D3EE;">🔬 Virtual IoT Simulation Lab</h3>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem;">Simulate real-world parking maneuvers, ultrasonic sensor telemetry, and security violations</p>
+          </div>
+          <button class="btn btn-danger" onclick="confirmResetSimulation()">&#x21bb; Reset Simulation Facility</button>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1.25rem;">
+          <!-- Category 1: Normal Parking Scenarios -->
+          <div style="background-color: #0E1729; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 1.25rem;">
+            <h4 style="color: #10B981; font-size: 0.95rem; margin-bottom: 0.75rem;">1. Legitimate Parking Scenarios</h4>
+            <div style="display: flex; flex-direction: column; gap: 0.65rem;">
+              <button class="btn btn-success btn-block" style="font-size: 0.85rem;" onclick="triggerSimulation('park_correctly')">
+                &check; Vehicle Parks Correctly
+              </button>
+              <p style="font-size: 0.78rem; color: var(--text-muted);">Transitions active reserved slot to occupied state with physical arrival sensor.</p>
+            </div>
+          </div>
+
+          <!-- Category 2: Incident & Obstruction -->
+          <div style="background-color: #0E1729; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 1.25rem;">
+            <h4 style="color: #F59E0B; font-size: 0.95rem; margin-bottom: 0.75rem;">2. Obstruction Scenarios</h4>
+            <div style="display: flex; flex-direction: column; gap: 0.65rem;">
+              <button class="btn btn-warning btn-block" style="font-size: 0.85rem;" onclick="promptPlaceObject()">
+                &Delta; Place Obstacle in Stall
+              </button>
+              <button class="btn btn-secondary btn-block" style="font-size: 0.85rem;" onclick="promptClearObject()">
+                &CircleTimes; Clear Obstacle from Stall
+              </button>
+              <button class="btn btn-danger btn-block" style="font-size: 0.85rem;" onclick="triggerSimulation('block_lane')">
+                🚨 Vehicle Blocks Inbound Lane
+              </button>
+            </div>
+          </div>
+
+          <!-- Category 3: Misbehavior & Violations -->
+          <div style="background-color: #0E1729; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 1.25rem;">
+            <h4 style="color: #F43F5E; font-size: 0.95rem; margin-bottom: 0.75rem;">3. Parking Violations</h4>
+            <div style="display: flex; flex-direction: column; gap: 0.65rem;">
+              <button class="btn btn-secondary btn-block" style="font-size: 0.85rem;" onclick="triggerSimulation('park_incorrectly')">
+                &ne; Park Outside Stall Lines
+              </button>
+              <button class="btn btn-secondary btn-block" style="font-size: 0.85rem;" onclick="triggerSimulation('cross_parking')">
+                &times; Diagonal Cross-Parking
+              </button>
+              <button class="btn btn-secondary btn-block" style="font-size: 0.85rem;" onclick="triggerSimulation('occupy_two_spaces')">
+                &harr; Straddle Two Spaces
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div id="simulationFeedback" style="display: none; margin-top: 1.25rem; padding: 0.85rem 1.25rem; border-radius: var(--radius-sm); font-size: 0.9rem;"></div>
+      </div>
+    </div>
+
+    <!-- =========================================================================
+         SECTION 7: SYSTEM HEALTH & AI DIAGNOSTICS
+         ========================================================================= -->
+    <div id="section-health" class="guard-section" style="display: none;">
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+          <div>
+            <h3 class="card-title" style="margin: 0;">SmartPark AI Operational Diagnostics</h3>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem;">Live diagnostic health check across computer vision models, databases, and microservices</p>
+          </div>
+          <button class="btn btn-secondary" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;" onclick="loadSystemHealth()">Run Diagnostics</button>
+        </div>
+
+        <div class="grid-2" id="healthComponentsGrid">
+          <!-- Dynamically Injected -->
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- Live Telemetry KPI Cards -->
-<div class="grid-4" style="margin-bottom: 2rem;">
-  <div class="card" style="border-left: 4px solid #38bdf8;">
-    <div style="font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600;">Total Facility Stalls</div>
-    <div style="font-size: 2rem; font-weight: 800; margin-top: 0.35rem;" id="kpiTotalSlots">15</div>
-    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">
-      <span id="kpiVacantSlots" style="color: #10b981; font-weight: 700;">--</span> Vacant &bull; 
-      <span id="kpiReservedSlots" style="color: #f59e0b; font-weight: 700;">--</span> Reserved &bull; 
-      <span id="kpiOccupiedSlots" style="color: #ef4444; font-weight: 700;">--</span> Occupied
+<!-- =========================================================================
+     MODALS: Alert Resolution, Slot Detail
+     ========================================================================= -->
+<!-- Alert Resolution Modal -->
+<div id="resolveAlertModal" class="modal-overlay">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 style="margin: 0; font-size: 1.15rem; color: #10B981; display: flex; align-items: center; gap: 0.5rem;">
+        <span>✅</span> <span>Confirm Incident Resolution</span>
+      </h3>
+      <button class="btn btn-secondary" style="padding: 0.2rem 0.5rem; font-size: 0.85rem;" onclick="closeModal('resolveAlertModal')">&times;</button>
     </div>
-  </div>
+    <div class="modal-body">
+      <p id="resolveAlertDescription" style="font-size: 0.95rem; color: #E2E8F0; margin-bottom: 1rem;"></p>
+      
+      <div class="form-group">
+        <label class="form-label" for="resolutionNoteInput">Resolution Officer Note</label>
+        <textarea id="resolutionNoteInput" class="form-input" rows="3" placeholder="e.g. Vehicle repositioned correctly within slot markings / Obstacle safely removed by guard..."></textarea>
+      </div>
 
-  <div class="card" style="border-left: 4px solid #10b981;">
-    <div style="font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600;">Active Sessions</div>
-    <div style="font-size: 2rem; font-weight: 800; margin-top: 0.35rem;" id="kpiActiveSessions">0</div>
-    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">
-      Today: <span id="kpiTodayEntries" style="font-weight: 700; color: #fff;">0</span> Entries &bull; 
-      <span id="kpiTodayExits" style="font-weight: 700; color: #fff;">0</span> Exits
+      <div style="background-color: #0E1729; border: 1px solid var(--border-subtle); padding: 0.75rem; border-radius: var(--radius-sm); font-size: 0.82rem; color: var(--text-muted);">
+        ℹ️ Resolving this alert records officer name and timestamp into the permanent facility audit trail.
+      </div>
     </div>
-  </div>
-
-  <div class="card" style="border-left: 4px solid #f59e0b;">
-    <div style="font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600;">Today's Revenue</div>
-    <div style="font-size: 2rem; font-weight: 800; margin-top: 0.35rem; color: #34d399;" id="kpiRevenue">₹0.00</div>
-    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">Billed from completed exit sessions</div>
-  </div>
-
-  <div class="card" style="border-left: 4px solid #ef4444;">
-    <div style="font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600;">Active Alerts & Incidents</div>
-    <div style="font-size: 2rem; font-weight: 800; margin-top: 0.35rem; color: #f87171;" id="kpiOpenAlerts">0</div>
-    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">
-      <span id="kpiBlockedSlots">0</span> slots physically blocked
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('resolveAlertModal')">Cancel</button>
+      <button id="btnConfirmResolve" class="btn btn-success" onclick="executeResolveAlert()">Confirm Resolution</button>
     </div>
   </div>
 </div>
 
-<!-- Tabs for Alerts, Dynamic Pricing & Activity History -->
-<div class="card" style="margin-bottom: 2rem;">
-  <div style="display: flex; gap: 0.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 1.25rem;">
-    <button class="btn btn-secondary active" id="tabAlertsBtn" onclick="switchGuardTab('alerts')">Active Incidents & Alerts</button>
-    <button class="btn btn-secondary" id="tabPricingBtn" onclick="switchGuardTab('pricing')">Dynamic Pricing Rules</button>
-    <button class="btn btn-secondary" id="tabHistoryBtn" onclick="switchGuardTab('history')">Recent Vehicle Audit Trail</button>
-  </div>
-
-  <!-- Tab 1: Alerts & Incidents -->
-  <div id="tabAlertsSection">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-      <h3 style="font-size: 1.15rem; font-weight: 700;">Incident & Violation Monitoring</h3>
-      <button class="btn btn-secondary" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;" onclick="loadGuardDashboard()">Refresh Alerts</button>
+<!-- Slot Detail Modal -->
+<div id="slotDetailModal" class="modal-overlay">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 id="modalSlotTitle" style="margin: 0; font-size: 1.2rem; color: #38BDF8;">Stall Information</h3>
+      <button class="btn btn-secondary" style="padding: 0.2rem 0.5rem; font-size: 0.85rem;" onclick="closeModal('slotDetailModal')">&times;</button>
     </div>
-    <div style="overflow-x: auto;">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Type</th>
-            <th>Severity</th>
-            <th>Description</th>
-            <th>Slot / Location</th>
-            <th>Vehicle Reg</th>
-            <th>Status</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody id="alertsTableBody">
-          <tr><td colspan="8" style="text-align: center; color: var(--text-muted);">Loading incidents...</td></tr>
-        </tbody>
-      </table>
+    <div class="modal-body" id="modalSlotBody">
+      <!-- Injected -->
     </div>
-  </div>
-
-  <!-- Tab 2: Dynamic Pricing Rules -->
-  <div id="tabPricingSection" style="display: none;">
-    <div style="margin-bottom: 1.25rem;">
-      <h3 style="font-size: 1.15rem; font-weight: 700;">Facility Pricing & Tariff Control</h3>
-      <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">
-        &bull; <strong>Default Policy:</strong> 60m free + 10m grace = 70m total free. Then ₹50 per started 2-hour block.<br>
-        &bull; <strong>Pricing Snapshot Rule:</strong> Active sessions lock pricing rules at parking start; changes affect future sessions only.
-      </p>
-    </div>
-
-    <div class="grid-3" id="pricingCardsGrid">
-      <!-- Injected via JavaScript -->
-    </div>
-  </div>
-
-  <!-- Tab 3: Recent Activity History -->
-  <div id="tabHistorySection" style="display: none;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-      <h3 style="font-size: 1.15rem; font-weight: 700;">Recent Parking Sessions Audit</h3>
-      <button class="btn btn-secondary" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;" onclick="loadHistory()">Refresh Logs</button>
-    </div>
-    <div style="overflow-x: auto;">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Ticket ID</th>
-            <th>Registration</th>
-            <th>Category</th>
-            <th>Slot</th>
-            <th>Entry Time</th>
-            <th>Parked Start</th>
-            <th>Exit Time</th>
-            <th>Status</th>
-            <th>Final Fee</th>
-          </tr>
-        </thead>
-        <tbody id="historyTableBody">
-          <tr><td colspan="9" style="text-align: center; color: var(--text-muted);">Loading session history...</td></tr>
-        </tbody>
-      </table>
+    <div class="modal-footer" id="modalSlotFooter">
+      <button class="btn btn-secondary" onclick="closeModal('slotDetailModal')">Close</button>
     </div>
   </div>
 </div>
+
 {% endblock %}
 
 {% block scripts %}
 <script>
+let currentSection = "overview";
+let currentAlertFilter = "ALL";
+let activeResolveAlertId = null;
+let currentParkingFilter = "ALL";
+let cachedSlots = [];
+
+// Navigation Switcher
+function switchSection(sectionId) {
+  document.querySelectorAll(".guard-section").forEach(sec => sec.style.display = "none");
+  document.querySelectorAll("aside nav button").forEach(btn => btn.classList.remove("active-nav"));
+
+  const targetSec = document.getElementById(`section-${sectionId}`);
+  const targetBtn = document.getElementById(`navBtn-${sectionId}`);
+  if (targetSec) targetSec.style.display = "block";
+  if (targetBtn) targetBtn.classList.add("active-nav");
+
+  currentSection = sectionId;
+
+  if (sectionId === "overview") loadGuardDashboard();
+  else if (sectionId === "parking") loadParkingGrid();
+  else if (sectionId === "alerts") loadAlerts();
+  else if (sectionId === "sessions") loadSessions();
+  else if (sectionId === "pricing") loadPricing();
+  else if (sectionId === "health") loadSystemHealth();
+}
+
+function filterParkingView(status) {
+  switchSection("parking");
+  applyParkingFilter(status);
+}
+
+// Clock
+function updateClock() {
+  const now = new Date();
+  document.getElementById("liveClock").textContent = now.toLocaleTimeString();
+  document.getElementById("liveDate").textContent = now.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// 1. Dashboard Overview
 async function loadGuardDashboard() {
   try {
     const res = await fetch("/api/guard/dashboard");
@@ -144,207 +575,571 @@ async function loadGuardDashboard() {
       document.getElementById("kpiVacantSlots").textContent = s.vacant_slots;
       document.getElementById("kpiReservedSlots").textContent = s.reserved_slots;
       document.getElementById("kpiOccupiedSlots").textContent = s.occupied_slots;
-      document.getElementById("kpiActiveSessions").textContent = s.active_sessions;
-      document.getElementById("kpiTodayEntries").textContent = s.today_entries;
-      document.getElementById("kpiTodayExits").textContent = s.today_exits;
-      document.getElementById("kpiRevenue").textContent = `₹${s.today_revenue.toFixed(2)}`;
-      document.getElementById("kpiOpenAlerts").textContent = s.open_alerts;
       document.getElementById("kpiBlockedSlots").textContent = s.blocked_slots;
+      document.getElementById("kpiActiveSessions").textContent = s.active_sessions;
+      document.getElementById("kpiOpenAlerts").textContent = s.open_alerts;
+      document.getElementById("kpiRevenue").textContent = `₹${s.today_revenue.toFixed(2)}`;
+      document.getElementById("kpiTrafficSummary").textContent = `${s.today_entries} entries • ${s.today_exits} exits today`;
+
+      // Update sidebar badge
+      const sbBadge = document.getElementById("sidebarAlertBadge");
+      if (s.open_alerts > 0) {
+        sbBadge.style.display = "inline-flex";
+        sbBadge.textContent = s.open_alerts;
+      } else {
+        sbBadge.style.display = "none";
+      }
+
+      // Update Donut Chart
+      updateDonutChart(s);
     }
   } catch (err) {
     console.error("Dashboard stats error:", err);
   }
 
-  loadAlerts();
+  loadRecentActivity();
 }
 
-async function loadAlerts() {
+function updateDonutChart(s) {
+  const total = s.total_slots || 15;
+  const occPct = Math.round(((s.occupied_slots + s.reserved_slots) / total) * 100);
+  document.getElementById("occupancyPercentCenter").textContent = `${occPct}%`;
+  document.getElementById("occupancyRateBadge").textContent = `${occPct}% Occupied`;
+
+  document.getElementById("donutLabelVacant").textContent = s.vacant_slots;
+  document.getElementById("donutLabelReserved").textContent = s.reserved_slots;
+  document.getElementById("donutLabelOccupied").textContent = s.occupied_slots;
+  document.getElementById("donutLabelBlocked").textContent = s.blocked_slots;
+
+  // Compute dash array percentages
+  const occDash = (s.occupied_slots / total) * 100;
+  const resDash = (s.reserved_slots / total) * 100;
+  const vacDash = (s.vacant_slots / total) * 100;
+
+  const donutOcc = document.getElementById("donutOccupied");
+  const donutRes = document.getElementById("donutReserved");
+  const donutVac = document.getElementById("donutVacant");
+
+  if (donutOcc) donutOcc.setAttribute("stroke-dasharray", `${occDash}, 100`);
+  if (donutRes) donutRes.setAttribute("stroke-dasharray", `${resDash}, 100`);
+  if (donutVac) donutVac.setAttribute("stroke-dasharray", `${vacDash}, 100`);
+}
+
+async function loadRecentActivity() {
   try {
-    const res = await fetch("/api/guard/alerts");
+    const res = await fetch("/api/guard/history");
+    const data = await res.json();
+    const list = document.getElementById("activityFeedList");
+    if (!data.success || (!data.recent_sessions.length && !data.recognition_logs.length)) {
+      list.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 1rem;">No recent facility events recorded.</div>`;
+      return;
+    }
+
+    let items = [];
+    data.recent_sessions.slice(0, 5).forEach(s => {
+      items.push({
+        icon: s.status === "COMPLETED" ? "🏁" : "🚘",
+        title: s.status === "COMPLETED" ? `Vehicle Exited: ${s.registration_number}` : `Vehicle Entered: ${s.registration_number}`,
+        desc: `Assigned Stall ${s.slot_number} (${s.parking_category})`,
+        time: s.exit_time || s.entry_time
+      });
+    });
+
+    list.innerHTML = items.map(item => `
+      <div style="display: flex; align-items: center; gap: 0.75rem; background-color: #0E1729; padding: 0.6rem 0.85rem; border-radius: 6px; border: 1px solid var(--border-subtle);">
+        <span style="font-size: 1.2rem;">${item.icon}</span>
+        <div style="flex: 1; min-width: 0;">
+          <div style="font-weight: 700; font-size: 0.88rem; color: #FFFFFF;">${item.title}</div>
+          <div style="font-size: 0.78rem; color: var(--text-muted);">${item.desc}</div>
+        </div>
+        <div style="font-size: 0.75rem; color: var(--text-secondary);">${formatDateTime(item.time)}</div>
+      </div>
+    `).join("");
+  } catch (err) {
+    console.error("Activity feed error:", err);
+  }
+}
+
+// 2. Parking Grid
+async function loadParkingGrid() {
+  try {
+    const res = await fetch("/api/parking/slots");
     const data = await res.json();
     if (data.success) {
-      renderAlertsTable(data.alerts);
+      cachedSlots = data.slots;
+      renderFilteredParkingGrid();
+    }
+  } catch (err) {
+    console.error("Slots error:", err);
+  }
+}
+
+function applyParkingFilter(status) {
+  currentParkingFilter = status;
+  document.querySelectorAll("#section-parking .card button").forEach(b => b.classList.remove("active"));
+  const btn = document.getElementById(`filterBtn-${status}`);
+  if (btn) btn.classList.add("active");
+  renderFilteredParkingGrid();
+}
+
+function renderFilteredParkingGrid() {
+  let filtered = cachedSlots;
+  if (currentParkingFilter !== "ALL") {
+    filtered = cachedSlots.filter(s => s.status === currentParkingFilter);
+  }
+
+  const dGrid = document.getElementById("guardGridDisabled");
+  const evGrid = document.getElementById("guardGridEV");
+  const nGrid = document.getElementById("guardGridNormal");
+
+  renderCategorySlots(dGrid, filtered.filter(s => s.category === "Disabled Parking"), "♿");
+  renderCategorySlots(evGrid, filtered.filter(s => s.category === "EV Charging Parking"), "⚡");
+  renderCategorySlots(nGrid, filtered.filter(s => s.category === "Normal Parking"), "🚗");
+}
+
+function renderCategorySlots(container, slots, icon) {
+  if (!slots.length) {
+    container.innerHTML = `<div style="grid-column: 1 / -1; color: var(--text-muted); font-size: 0.85rem; padding: 0.5rem;">No stalls matching current filter.</div>`;
+    return;
+  }
+
+  container.innerHTML = slots.map(s => {
+    const statLower = s.status.toLowerCase();
+    const plateBadge = s.registration_number ? `<span class="plate-tag">${s.registration_number}</span>` : `<span style="color:var(--text-muted); font-size:0.8rem;">Available</span>`;
+
+    return `
+      <div class="slot-item status-${statLower}" onclick="openSlotDetail(${s.id})">
+        <div class="slot-item-header">
+          <span class="slot-code">${icon} ${s.slot_number}</span>
+          <span class="badge badge-${statLower}">${s.status}</span>
+        </div>
+        <div class="slot-plate">${plateBadge}</div>
+        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.4rem;">Click for telemetry</div>
+      </div>
+    `;
+  }).join("");
+}
+
+function openSlotDetail(slotId) {
+  const slot = cachedSlots.find(s => s.id === slotId);
+  if (!slot) return;
+
+  document.getElementById("modalSlotTitle").textContent = `Stall ${slot.slot_number} Telemetry Details`;
+  const body = document.getElementById("modalSlotBody");
+
+  body.innerHTML = `
+    <div style="display: flex; flex-direction: column; gap: 0.75rem; font-size: 0.92rem;">
+      <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.5rem;">
+        <span style="color: var(--text-secondary);">Category:</span>
+        <strong>${slot.category}</strong>
+      </div>
+      <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.5rem;">
+        <span style="color: var(--text-secondary);">Current Status:</span>
+        <span class="badge badge-${slot.status.toLowerCase()}">${slot.status}</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.5rem;">
+        <span style="color: var(--text-secondary);">Occupying Vehicle:</span>
+        <strong>${slot.registration_number || 'None'}</strong>
+      </div>
+      <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.5rem;">
+        <span style="color: var(--text-secondary);">Active Ticket:</span>
+        <code>${slot.ticket_id || 'None'}</code>
+      </div>
+      <div style="display: flex; justify-content: space-between;">
+        <span style="color: var(--text-secondary);">Parked Timestamp:</span>
+        <span>${formatDateTime(slot.parked_start_time)}</span>
+      </div>
+    </div>
+  `;
+
+  openModal("slotDetailModal");
+}
+
+// 3. Alerts & Incidents
+async function loadAlerts() {
+  try {
+    const sev = document.getElementById("alertSeveritySelect")?.value || "ALL";
+    const sort = document.getElementById("alertSortSelect")?.value || "newest";
+    const search = document.getElementById("alertSearchInput")?.value || "";
+
+    let url = `/api/guard/alerts?status=${currentAlertFilter}&severity=${sev}&sort=${sort}`;
+    if (search.trim()) url += `&search=${encodeURIComponent(search.trim())}`;
+
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.success) {
+      // Update summary counters
+      if (data.counts) {
+        document.getElementById("alertSummaryTotal").textContent = data.counts.total;
+        document.getElementById("alertSummaryNew").textContent = data.counts.open;
+        document.getElementById("alertSummaryInProgress").textContent = data.counts.in_progress;
+        document.getElementById("alertSummaryResolved").textContent = data.counts.resolved;
+      }
+      renderAlertCards(data.alerts);
     }
   } catch (err) {
     console.error("Alerts error:", err);
   }
 }
 
-function renderAlertsTable(alerts) {
-  const tbody = document.getElementById("alertsTableBody");
-  if (!alerts || alerts.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No active security incidents or alerts.</td></tr>`;
+function renderAlertCards(alerts) {
+  const container = document.getElementById("alertsCardsContainer");
+  if (!alerts || !alerts.length) {
+    container.innerHTML = `
+      <div class="card" style="text-align: center; color: var(--text-muted); padding: 2.5rem;">
+        <div style="font-size: 2rem; margin-bottom: 0.5rem;">🛡️</div>
+        <div style="font-size: 1.05rem; font-weight: 700; color: #FFFFFF;">No Incidents Found</div>
+        <div style="font-size: 0.85rem; margin-top: 0.25rem;">No security alerts matching current filter and search criteria.</div>
+      </div>
+    `;
     return;
   }
 
-  tbody.innerHTML = alerts.map(a => {
-    let sevBadge = `<span class="badge badge-low">${a.severity}</span>`;
-    if (a.severity === "CRITICAL" || a.severity === "HIGH") {
-      sevBadge = `<span class="badge" style="background-color: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid #ef4444;">${a.severity}</span>`;
-    } else if (a.severity === "MEDIUM") {
-      sevBadge = `<span class="badge badge-medium">${a.severity}</span>`;
-    }
+  container.innerHTML = alerts.map(a => {
+    const sevClass = a.severity.toLowerCase();
+    let statusBadge = `<span class="badge badge-new">NEW</span>`;
+    if (a.status === "ACKNOWLEDGED") statusBadge = `<span class="badge badge-inprogress">IN PROGRESS</span>`;
+    else if (a.status === "RESOLVED") statusBadge = `<span class="badge badge-resolved">RESOLVED</span>`;
 
-    let statusBadge = `<span class="badge badge-high">${a.status}</span>`;
+    let actionsHtml = "";
     if (a.status === "OPEN") {
-      statusBadge = `<span class="badge" style="background-color: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444;">OPEN</span>`;
-    } else if (a.status === "ACKNOWLEDGED") {
-      statusBadge = `<span class="badge badge-medium">ACKNOWLEDGED</span>`;
-    }
-
-    let actionBtns = "";
-    if (a.status === "OPEN") {
-      actionBtns = `
-        <button class="btn btn-warning" style="padding: 0.25rem 0.5rem; font-size: 0.78rem;" onclick="ackAlert(${a.id})">Acknowledge</button>
-        <button class="btn btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.78rem;" onclick="resolveAlert(${a.id})">Resolve</button>
+      actionsHtml = `
+        <button class="btn btn-warning" style="padding: 0.4rem 0.85rem; font-size: 0.82rem;" onclick="acknowledgeAlert(${a.id})">
+          👁️ Acknowledge Alert
+        </button>
+        <button class="btn btn-success" style="padding: 0.4rem 0.85rem; font-size: 0.82rem;" onclick="openResolveModal(${a.id}, '${escapeQuotes(a.description)}')">
+          ✅ Mark Resolved
+        </button>
       `;
     } else if (a.status === "ACKNOWLEDGED") {
-      actionBtns = `
-        <button class="btn btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.78rem;" onclick="resolveAlert(${a.id})">Resolve</button>
+      actionsHtml = `
+        <button class="btn btn-success" style="padding: 0.4rem 0.85rem; font-size: 0.82rem;" onclick="openResolveModal(${a.id}, '${escapeQuotes(a.description)}')">
+          ✅ Mark Resolved
+        </button>
       `;
     } else {
-      actionBtns = `<span style="font-size: 0.8rem; color: var(--text-muted);">Resolved</span>`;
+      actionsHtml = `
+        <div style="font-size: 0.82rem; color: #10B981; display: flex; align-items: center; gap: 0.4rem;">
+          <span>✅ Resolved by <strong>${a.resolved_by || 'guard_admin'}</strong></span>
+          <span style="color: var(--text-muted);">&bull; ${formatDateTime(a.resolved_at)}</span>
+        </div>
+      `;
     }
 
     return `
-      <tr>
-        <td>#${a.id}</td>
-        <td><strong>${a.alert_type}</strong></td>
-        <td>${sevBadge}</td>
-        <td>${a.description}</td>
-        <td>${a.slot_number ? 'Slot ' + a.slot_number : (a.lane_id || '--')}</td>
-        <td><code>${a.registration_number || '--'}</code></td>
-        <td>${statusBadge}</td>
-        <td><div style="display: flex; gap: 0.35rem;">${actionBtns}</div></td>
-      </tr>
+      <div class="alert-card severity-${sevClass}">
+        <div class="alert-header">
+          <div class="alert-title-group">
+            <span style="font-size: 1.3rem;">${a.severity === 'CRITICAL' ? '🚨' : (a.severity === 'HIGH' ? '⚠️' : 'ℹ️')}</span>
+            <div>
+              <div class="alert-title">${a.alert_type}</div>
+              <div style="font-size: 0.78rem; color: var(--text-muted);">Alert ID #${a.id} &bull; Detected: ${formatDateTime(a.created_at)}</div>
+            </div>
+          </div>
+          <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <span class="badge" style="background-color: rgba(255,255,255,0.08); font-size: 0.75rem;">${a.severity}</span>
+            ${statusBadge}
+          </div>
+        </div>
+
+        <div class="alert-desc">${a.description}</div>
+
+        <div class="alert-meta">
+          <div class="alert-meta-item">Location / Stall: <strong>${a.slot_number ? 'Stall ' + a.slot_number : (a.lane_id || 'Facility General')}</strong></div>
+          <div class="alert-meta-item">Vehicle Involved: <strong>${a.registration_number || 'None'}</strong></div>
+          ${a.resolution_note ? `<div class="alert-meta-item" style="color: #34D399;">Resolution Note: <em>"${a.resolution_note}"</em></div>` : ''}
+        </div>
+
+        <div class="alert-actions">
+          ${actionsHtml}
+        </div>
+      </div>
     `;
   }).join("");
 }
 
-async function ackAlert(id) {
-  await fetch(`/api/guard/alerts/${id}/acknowledge`, { method: "POST" });
+function escapeQuotes(str) {
+  if (!str) return "";
+  return str.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+}
+
+function setAlertStatusFilter(status) {
+  currentAlertFilter = status;
+  document.querySelectorAll("#section-alerts .card button").forEach(b => b.classList.remove("active"));
+  const btn = document.getElementById(`alertFilter-${status}`);
+  if (btn) btn.classList.add("active");
   loadAlerts();
 }
 
-async function resolveAlert(id) {
-  await fetch(`/api/guard/alerts/${id}/resolve`, { method: "POST" });
-  loadAlerts();
+let searchTimeout = null;
+function debounceAlertSearch() {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(loadAlerts, 300);
 }
 
-// Pricing Tab
+async function acknowledgeAlert(alertId) {
+  try {
+    const res = await fetch(`/api/guard/alerts/${alertId}/acknowledge`, { method: "POST" });
+    const data = await res.json();
+    if (data.success) {
+      showToast(data.message, "success");
+      loadAlerts();
+      loadGuardDashboard();
+    } else {
+      showToast(data.message || "Failed to acknowledge alert", "error");
+    }
+  } catch (e) {
+    showToast("Network error acknowledging alert", "error");
+  }
+}
+
+function openResolveModal(alertId, desc) {
+  activeResolveAlertId = alertId;
+  document.getElementById("resolveAlertDescription").textContent = `Incident: ${desc}`;
+  document.getElementById("resolutionNoteInput").value = "Guard confirmed condition addressed and safe.";
+  openModal("resolveAlertModal");
+}
+
+async function executeResolveAlert() {
+  if (!activeResolveAlertId) return;
+  const note = document.getElementById("resolutionNoteInput").value.trim();
+
+  try {
+    const res = await fetch(`/api/guard/alerts/${activeResolveAlertId}/resolve`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ note })
+    });
+    const data = await res.json();
+    if (data.success) {
+      closeModal("resolveAlertModal");
+      showToast(data.message, "success");
+      loadAlerts();
+      loadGuardDashboard();
+    } else {
+      showToast(data.message || "Resolution failed", "error");
+    }
+  } catch (e) {
+    showToast("Network error resolving alert", "error");
+  }
+}
+
+// 4. Sessions Audit
+async function loadSessions() {
+  try {
+    const res = await fetch("/api/guard/history");
+    const data = await res.json();
+    const tbody = document.getElementById("sessionsTableBody");
+    if (!data.success || !data.recent_sessions.length) {
+      tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No active or historical parking sessions.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = data.recent_sessions.map(s => `
+      <tr>
+        <td><code>${s.ticket_id}</code></td>
+        <td><strong>${s.registration_number}</strong></td>
+        <td>${s.parking_category}</td>
+        <td>Stall ${s.slot_number}</td>
+        <td>${formatDateTime(s.entry_time)}</td>
+        <td>${formatDateTime(s.parked_start_time)}</td>
+        <td>${formatDateTime(s.exit_time)}</td>
+        <td><span class="badge ${s.status === 'COMPLETED' ? 'badge-vacant' : 'badge-reserved'}">${s.status}</span></td>
+        <td style="font-weight: 800; color: #10B981;">₹${(s.final_amount || 0).toFixed(2)}</td>
+      </tr>
+    `).join("");
+  } catch (err) {
+    console.error("Sessions error:", err);
+  }
+}
+
+// 5. Pricing
 async function loadPricing() {
   try {
     const res = await fetch("/api/guard/pricing");
     const data = await res.json();
-    if (data.success) {
-      renderPricingCards(data.pricing_rules);
-    }
+    const grid = document.getElementById("pricingCardsGrid");
+    if (!data.success || !data.pricing_rules) return;
+
+    grid.innerHTML = Object.entries(data.pricing_rules).map(([cat, r]) => `
+      <div class="card" style="border-top: 4px solid #22D3EE;">
+        <h4 style="color: #22D3EE; font-size: 1.1rem; margin-bottom: 0.75rem;">${cat}</h4>
+        
+        <div class="form-group">
+          <label class="form-label">Complimentary Free Mins</label>
+          <input type="number" id="price_free_${escapeId(cat)}" class="form-input" value="${r.free_minutes}" min="0" step="5">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Grace Period Mins</label>
+          <input type="number" id="price_grace_${escapeId(cat)}" class="form-input" value="${r.grace_minutes}" min="0" step="5">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Rate per Block (₹)</label>
+          <input type="number" id="price_charge_${escapeId(cat)}" class="form-input" value="${r.charge_amount}" min="0" step="10">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Block Interval Mins</label>
+          <input type="number" id="price_interval_${escapeId(cat)}" class="form-input" value="${r.billing_interval_minutes}" min="15" step="15">
+        </div>
+
+        <button class="btn btn-primary btn-block" style="font-size: 0.88rem;" onclick="savePricingRule('${cat}')">
+          Save Tariff Policy
+        </button>
+      </div>
+    `).join("");
   } catch (err) {
-    console.error("Pricing error:", err);
+    console.error("Pricing load error:", err);
   }
 }
 
-function renderPricingCards(rules) {
-  const grid = document.getElementById("pricingCardsGrid");
-  grid.innerHTML = Object.values(rules).map(r => `
-    <div class="card" style="border-top: 4px solid #38bdf8;">
-      <h4 style="font-size: 1.1rem; margin-bottom: 0.75rem;">${r.category}</h4>
-      <div class="form-group">
-        <label class="form-label">Free Period (Minutes)</label>
-        <input type="number" id="free_${r.category}" class="form-input" value="${r.free_minutes}">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Grace Period (Minutes)</label>
-        <input type="number" id="grace_${r.category}" class="form-input" value="${r.grace_minutes}">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Charge Rate (₹)</label>
-        <input type="number" id="charge_${r.category}" class="form-input" value="${r.charge_amount}">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Billing Interval (Minutes)</label>
-        <input type="number" id="interval_${r.category}" class="form-input" value="${r.billing_interval_minutes}">
-      </div>
-      <button class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;" onclick="savePricing('${r.category}')">
-        Update ${r.category} Rate
-      </button>
-    </div>
-  `).join("");
+function escapeId(str) {
+  return str.replace(/[^a-zA-Z0-9]/g, "_");
 }
 
-async function savePricing(category) {
-  const freeMins = document.getElementById(`free_${category}`).value;
-  const graceMins = document.getElementById(`grace_${category}`).value;
-  const chargeAmt = document.getElementById(`charge_${category}`).value;
-  const intervalMins = document.getElementById(`interval_${category}`).value;
+async function savePricingRule(category) {
+  const idStr = escapeId(category);
+  const freeM = parseInt(document.getElementById(`price_free_${idStr}`).value);
+  const graceM = parseInt(document.getElementById(`price_grace_${idStr}`).value);
+  const charge = parseFloat(document.getElementById(`price_charge_${idStr}`).value);
+  const interval = parseInt(document.getElementById(`price_interval_${idStr}`).value);
 
   try {
     const res = await fetch("/api/guard/pricing", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        category: category,
-        free_minutes: parseInt(freeMins),
-        grace_minutes: parseInt(graceMins),
-        charge_amount: parseFloat(chargeAmt),
-        billing_interval_minutes: parseInt(intervalMins),
-        rounding_policy: "CEIL_INTERVAL"
+        category,
+        free_minutes: freeM,
+        grace_minutes: graceM,
+        charge_amount: charge,
+        billing_interval_minutes: interval
       })
     });
     const data = await res.json();
-    alert(data.message);
-  } catch (err) {
-    alert("Failed to update pricing.");
+    if (data.success) {
+      showToast(`Pricing updated for ${category}!`, "success");
+    } else {
+      showToast(data.message || "Pricing update failed", "error");
+    }
+  } catch (e) {
+    showToast("Error updating pricing", "error");
   }
 }
 
-// History Tab
-async function loadHistory() {
+// 6. Simulation Actions
+async function triggerSimulation(action, params = {}) {
+  const fb = document.getElementById("simulationFeedback");
+  fb.style.display = "block";
+  fb.style.backgroundColor = "#16243F";
+  fb.style.color = "#38BDF8";
+  fb.innerHTML = `Simulating action: <strong>${action}</strong>...`;
+
   try {
-    const res = await fetch("/api/guard/history");
+    const res = await fetch("/api/parking/simulate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action, ...params })
+    });
     const data = await res.json();
     if (data.success) {
-      const tbody = document.getElementById("historyTableBody");
-      tbody.innerHTML = data.recent_sessions.map(s => `
-        <tr>
-          <td><code>${s.ticket_id}</code></td>
-          <td><strong>${s.registration_number}</strong></td>
-          <td>${s.parking_category}</td>
-          <td>Slot ${s.slot_number}</td>
-          <td>${s.entry_time || '--'}</td>
-          <td>${s.parked_start_time || '--'}</td>
-          <td>${s.exit_time || '--'}</td>
-          <td><span class="badge badge-${s.status === 'COMPLETED' ? 'vacant' : (s.status === 'ACTIVE' ? 'reserved' : 'blocked')}">${s.status}</span></td>
-          <td>₹${s.final_amount.toFixed(2)}</td>
-        </tr>
-      `).join("");
+      fb.style.backgroundColor = "rgba(16, 185, 129, 0.15)";
+      fb.style.color = "#34D399";
+      fb.innerHTML = `✅ Simulation executed: ${data.message}`;
+      showToast(data.message, "success");
+      loadGuardDashboard();
+      loadAlerts();
+    } else {
+      fb.style.backgroundColor = "rgba(244, 63, 94, 0.15)";
+      fb.style.color = "#FB7185";
+      fb.innerHTML = `❌ Simulation failed: ${data.message}`;
+      showToast(data.message, "error");
     }
-  } catch (err) {
-    console.error("History fetch error:", err);
+  } catch (e) {
+    fb.innerHTML = "❌ Network error triggering simulation";
   }
 }
 
-function switchGuardTab(tab) {
-  document.getElementById("tabAlertsSection").style.display = tab === "alerts" ? "block" : "none";
-  document.getElementById("tabPricingSection").style.display = tab === "pricing" ? "block" : "none";
-  document.getElementById("tabHistorySection").style.display = tab === "history" ? "block" : "none";
+function promptPlaceObject() {
+  const slotNumber = prompt("Enter slot number to obstruct (e.g. N-01, D-01):", "N-01");
+  if (!slotNumber) return;
+  const slot = cachedSlots.find(s => s.slot_number.toUpperCase() === slotNumber.trim().toUpperCase());
+  if (slot) {
+    triggerSimulation("place_object", { slot_id: slot.id });
+  } else {
+    showToast(`Slot '${slotNumber}' not found.`, "error");
+  }
+}
 
-  document.getElementById("tabAlertsBtn").classList.toggle("active", tab === "alerts");
-  document.getElementById("tabPricingBtn").classList.toggle("active", tab === "pricing");
-  document.getElementById("tabHistoryBtn").classList.toggle("active", tab === "history");
+function promptClearObject() {
+  const slotNumber = prompt("Enter blocked slot number to clear (e.g. N-01):", "N-01");
+  if (!slotNumber) return;
+  const slot = cachedSlots.find(s => s.slot_number.toUpperCase() === slotNumber.trim().toUpperCase());
+  if (slot) {
+    triggerSimulation("clear_object", { slot_id: slot.id });
+  } else {
+    showToast(`Slot '${slotNumber}' not found.`, "error");
+  }
+}
 
-  if (tab === "pricing") loadPricing();
-  if (tab === "history") loadHistory();
+function confirmResetSimulation() {
+  if (confirm("Reset simulation facility? This will restore all slots to baseline VACANT.")) {
+    triggerSimulation("reset_simulation");
+  }
+}
+
+// 7. System Health Diagnostics
+async function loadSystemHealth() {
+  try {
+    const res = await fetch("/api/system/health");
+    const data = await res.json();
+    const grid = document.getElementById("healthComponentsGrid");
+    if (!data.success || !data.components) return;
+
+    grid.innerHTML = Object.entries(data.components).map(([key, comp]) => {
+      const isOk = comp.status.includes("Operational");
+      const badgeClass = isOk ? "badge-vacant" : "badge-reserved";
+
+      return `
+        <div class="card" style="border-left: 4px solid ${isOk ? '#10B981' : '#F59E0B'};">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+            <strong style="font-size: 1.05rem; color: #FFFFFF;">${comp.name}</strong>
+            <span class="badge ${badgeClass}">${isOk ? 'OPERATIONAL' : 'STANDBY'}</span>
+          </div>
+          <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.35rem;">
+            Status: <span style="color: #FFFFFF;">${comp.status}</span>
+          </div>
+          ${comp.precision_mAP50 ? `<div style="font-size: 0.8rem; color: #22D3EE;">Detection Precision (mAP@50): <strong>${comp.precision_mAP50}</strong></div>` : ''}
+          ${comp.storage ? `<div style="font-size: 0.8rem; color: var(--text-muted);">Storage: <code>${comp.storage}</code></div>` : ''}
+        </div>
+      `;
+    }).join("");
+  } catch (err) {
+    console.error("Health check error:", err);
+  }
 }
 
 // Logout
-document.getElementById("btnLogout").addEventListener("click", async () => {
+async function logoutGuard() {
   await fetch("/api/guard/logout", { method: "POST" });
   window.location.href = "/guard/login";
+}
+
+// Initial Boot
+document.addEventListener("DOMContentLoaded", () => {
+  loadGuardDashboard();
+  loadParkingGrid();
+  // Auto-refresh dashboard telemetry every 10 seconds
+  setInterval(() => {
+    if (currentSection === "overview") loadGuardDashboard();
+    else if (currentSection === "parking") loadParkingGrid();
+  }, 10000);
 });
-
-loadGuardDashboard();
-setInterval(loadGuardDashboard, 4000);
 </script>
+<style>
+.active-nav {
+  background-color: rgba(34, 211, 238, 0.15) !important;
+  color: #22D3EE !important;
+  border-left: 3px solid #22D3EE !important;
+}
+</style>
 {% endblock %}
-

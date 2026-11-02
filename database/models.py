@@ -93,9 +93,23 @@ def init_db():
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         acknowledged_at TIMESTAMP,
         resolved_at TIMESTAMP,
+        resolved_by TEXT,
+        resolution_note TEXT,
+        last_seen_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (slot_id) REFERENCES parking_slots (id)
     );
     """)
+
+    # Migrate columns if existing database was created with older schema
+    cursor.execute("PRAGMA table_info(alerts);")
+    existing_alert_cols = [r[1] for r in cursor.fetchall()]
+    for col_name, col_type in [
+        ("resolved_by", "TEXT"),
+        ("resolution_note", "TEXT"),
+        ("last_seen_at", "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    ]:
+        if col_name not in existing_alert_cols:
+            cursor.execute(f"ALTER TABLE alerts ADD COLUMN {col_name} {col_type};")
 
     # 6. Simulation Events
     cursor.execute("""

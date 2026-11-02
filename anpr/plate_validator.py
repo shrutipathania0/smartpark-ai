@@ -9,22 +9,38 @@ from typing import Dict, Any, Tuple
 
 # Valid 2-letter State & UT codes in India
 VALID_STATE_CODES = {
-    "AN", "AP", "AR", "AS", "BR", "CH", "CG", "CH", "DN", "DD",
-    "DL", "GA", "GJ", "HR", "HP", "JK", "JH", "KA", "KL", "LA",
-    "LD", "MP", "MH", "MN", "ML", "MZ", "NL", "OD", "PB", "RJ",
-    "SK", "TN", "TS", "TR", "UP", "UK", "WB", "BH"
+    "AN", "AP", "AR", "AS", "BR", "CH", "CG", "DD", "DN", "DL",
+    "GA", "GJ", "HR", "HP", "JK", "JH", "KA", "KL", "LA", "LD",
+    "MP", "MH", "MN", "ML", "MZ", "NL", "OD", "PB", "RJ", "SK",
+    "TN", "TS", "TR", "UP", "UK", "WB", "BH"
 }
 
 DIGIT_TO_LETTER = {
-    '0': 'O', '1': 'I', '2': 'Z', '5': 'S', '8': 'B'
+    '0': 'O', '1': 'I', '2': 'Z', '4': 'A', '5': 'S', '6': 'G', '7': 'T', '8': 'B'
 }
 
 LETTER_TO_DIGIT = {
     'O': '0', 'Q': '0', 'D': '0',
-    'I': '1', 'L': '1', 'T': '1',
+    'I': '1', 'T': '1',
     'Z': '2',
     'S': '5',
     'B': '8', 'G': '6'
+}
+
+# State code correction mappings for common OCR character confusions
+STATE_CODE_CORRECTIONS = {
+    "TH": "TN",
+    "TM": "TN",
+    "RN": "TN",
+    "1N": "TN",
+    "6J": "GJ",
+    "0L": "DL",
+    "D1": "DL",
+    "C6": "CG",
+    "H9": "HP",
+    "P8": "PB",
+    "R1": "RJ",
+    "M1": "MH"
 }
 
 def clean_ocr_text(raw_text: str) -> str:
@@ -51,15 +67,38 @@ def normalize_standard_plate(plate: str) -> str:
         if chars[i] in DIGIT_TO_LETTER:
             chars[i] = DIGIT_TO_LETTER[chars[i]]
 
+    # Apply known state code corrections
+    state = "".join(chars[:2])
+    if state in STATE_CODE_CORRECTIONS:
+        chars[0] = STATE_CODE_CORRECTIONS[state][0]
+        chars[1] = STATE_CODE_CORRECTIONS[state][1]
+
     # 2. Next 2 characters (pos 2, 3) must be RTO digits
     for i in range(2, min(4, n)):
         if chars[i] in LETTER_TO_DIGIT:
             chars[i] = LETTER_TO_DIGIT[chars[i]]
 
+    # Special case: Tripura (TR) only has RTOs 01 to 08. If state is TR but RTO > 08 (e.g. 52), it is Tamil Nadu (TN)
+    if chars[0] == 'T' and chars[1] == 'R' and n >= 4:
+        rto_str = "".join(chars[2:4])
+        if rto_str.isdigit() and int(rto_str) > 8:
+            chars[1] = 'N'
+
     # 3. Last 4 characters must be numeric registration digits
-    for i in range(max(4, n - 4), n):
-        if chars[i] in LETTER_TO_DIGIT:
-            chars[i] = LETTER_TO_DIGIT[chars[i]]
+    # In Indian plate typography, 'LL' in the tail is a frequent OCR misclassification of '44'
+    tail_start = max(4, n - 4)
+    tail_chars = chars[tail_start:n]
+    tail_str = "".join(tail_chars)
+    if "LL" in tail_str:
+        tail_str = tail_str.replace("LL", "44")
+        tail_chars = list(tail_str)
+
+    for i in range(len(tail_chars)):
+        if tail_chars[i] in LETTER_TO_DIGIT:
+            tail_chars[i] = LETTER_TO_DIGIT[tail_chars[i]]
+        elif tail_chars[i] == 'L':
+            tail_chars[i] = '1'
+    chars[tail_start:n] = tail_chars
 
     # 4. Characters in between (series letters) must be letters
     for i in range(4, max(4, n - 4)):

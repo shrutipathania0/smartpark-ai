@@ -1,143 +1,158 @@
 {% extends "base.html" %}
 
-{% block title %}SmartPark AI - Parking Area Monitoring{% endblock %}
+{% block title %}SmartPark AI - Interactive Parking Area Spatial Map{% endblock %}
 
 {% block content %}
 <div class="page-header">
   <div>
-    <h1 class="page-title">Parking Area Monitoring</h1>
-    <p class="page-subtitle">Interactive IoT Spatial Grid, Slot Telemetry & Simulation Controls</p>
+    <h1 class="page-title">Interactive Parking Area Map</h1>
+    <p class="page-subtitle">Real-time IoT spatial telemetry, live ultrasonic stall sensors, and simulation controls</p>
   </div>
-  <div style="display: flex; gap: 0.75rem; align-items: center;">
-    <div style="display: flex; gap: 0.5rem;">
-      <span class="badge badge-vacant">&bull; VACANT</span>
-      <span class="badge badge-reserved">&bull; RESERVED</span>
-      <span class="badge badge-occupied">&bull; OCCUPIED</span>
-      <span class="badge badge-blocked">&bull; BLOCKED</span>
+  <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+      <span class="badge badge-vacant">● VACANT</span>
+      <span class="badge badge-reserved">● RESERVED</span>
+      <span class="badge badge-occupied">● OCCUPIED</span>
+      <span class="badge badge-blocked">● BLOCKED</span>
     </div>
-    <button id="btnRefreshSlots" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">Refresh</button>
+    <div style="font-size: 0.82rem; color: var(--text-muted); background: #0E1729; padding: 0.4rem 0.75rem; border-radius: var(--radius-pill); border: 1px solid var(--border-subtle);">
+      Updated: <span id="lastUpdatedText" style="color: #22D3EE; font-weight: 700;">Just now</span>
+    </div>
+    <button id="btnRefreshSlots" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" onclick="loadParkingMap()">
+      🔄 Refresh
+    </button>
   </div>
 </div>
 
-<!-- Simulation Action Bar -->
-<div class="card" style="margin-bottom: 2rem; background: linear-gradient(135deg, #1e293b, #0f172a); border-color: #38bdf8;">
-  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem;">
-    <h3 style="font-size: 1.05rem; font-weight: 700; color: #38bdf8; display: flex; align-items: center; gap: 0.5rem;">
-      <span>🎮</span>
-      <span>IoT Facility Simulation Engine</span>
-    </h3>
-    <span style="font-size: 0.8rem; color: var(--text-muted);">Simulate real-world parking maneuvers & sensor incidents</span>
+<!-- Simulation Control Cockpit -->
+<div class="card" style="margin-bottom: 1.5rem; background: linear-gradient(135deg, #16243F 0%, #0E1729 100%); border: 1px solid #22D3EE;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem; flex-wrap: wrap; gap: 0.5rem;">
+    <div style="display: flex; align-items: center; gap: 0.6rem;">
+      <span style="font-size: 1.3rem;">🔬</span>
+      <h3 style="font-size: 1.05rem; font-weight: 800; color: #22D3EE; margin: 0;">Facility Telemetry & Simulation Controls</h3>
+    </div>
+    <span style="font-size: 0.8rem; color: var(--text-muted);">Simulate vehicle arrivals, stall blockages, and safety incidents</span>
   </div>
 
   <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
-    <button class="btn btn-primary" onclick="triggerSimulation('park_correctly')" title="Confirm vehicle arrives and parks in its reserved slot">
-      &check; Park Correctly
+    <button class="btn btn-success" onclick="triggerSim('park_correctly')" title="Confirm vehicle arrives and parks in its reserved stall">
+      ✅ Park Correctly
     </button>
     <button class="btn btn-warning" onclick="promptPlaceObject()" title="Simulate obstruction blocking a parking stall">
-      &Delta; Place Object
+      ⚠️ Place Obstacle
     </button>
     <button class="btn btn-secondary" onclick="promptClearObject()" title="Clear object obstruction from stall">
-      &CircleTimes; Clear Object
+      🔄 Clear Obstacle
     </button>
-    <button class="btn btn-secondary" onclick="triggerSimulation('park_incorrectly')" title="Generate wrong parking violation">
-      &ne; Park Incorrectly
+    <button class="btn btn-danger" onclick="triggerSim('block_lane')" title="Simulate vehicle or barrier blocking entry/exit lane">
+      🚨 Block Lane
     </button>
-    <button class="btn btn-danger" onclick="triggerSimulation('block_lane')" title="Simulate vehicle or barrier blocking entry/exit lane">
-      &cross; Block Lane
+    <button class="btn btn-secondary" onclick="triggerSim('park_incorrectly')" title="Generate wrong parking violation">
+      ≠ Park Incorrectly
     </button>
-    <button class="btn btn-secondary" onclick="triggerSimulation('cross_parking')" title="Simulate diagonal cross-parking violation">
-      &times; Cross Parking
+    <button class="btn btn-secondary" onclick="triggerSim('cross_parking')" title="Simulate diagonal cross-parking violation">
+      ✕ Cross Parking
     </button>
-    <button class="btn btn-secondary" onclick="triggerSimulation('occupy_two_spaces')" title="Simulate vehicle straddling 2 spots">
-      &harr; Occupy 2 Spaces
+    <button class="btn btn-secondary" onclick="triggerSim('occupy_two_spaces')" title="Simulate vehicle straddling 2 spots">
+      ↔ Straddle 2 Spaces
     </button>
-    <button class="btn btn-secondary" onclick="triggerSimulation('wrong_space')" title="Simulate vehicle parking in wrong slot">
-      &larr;&rarr; Wrong Space
-    </button>
-    <button class="btn btn-danger" onclick="confirmResetSimulation()" style="margin-left: auto;" title="Restore all slots to clean vacant baseline">
-      &#x21bb; Reset Simulation
+    <button class="btn btn-danger" onclick="confirmReset()" style="margin-left: auto;" title="Restore all slots to clean vacant baseline">
+      🔁 Reset Simulation
     </button>
   </div>
-  <div id="simFeedbackMsg" style="display: none; margin-top: 0.75rem; padding: 0.5rem 0.85rem; border-radius: 6px; font-size: 0.85rem;"></div>
+  <div id="simMsg" style="display: none; margin-top: 0.75rem; padding: 0.6rem 1rem; border-radius: 6px; font-size: 0.88rem;"></div>
 </div>
 
-<!-- Parking Grid By Category -->
-<div class="parking-section">
-  <div class="section-header">
-    <div class="section-title">
-      <span>♿</span>
-      <span>Disabled Parking Spaces (Priority Access)</span>
+<!-- Filter & Search Bar -->
+<div class="card" style="margin-bottom: 1.5rem; padding: 1rem 1.25rem;">
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+    <!-- Status & Category Filters -->
+    <div style="display: flex; gap: 0.4rem; flex-wrap: wrap; align-items: center;">
+      <span style="font-size: 0.82rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-right: 0.35rem;">Status:</span>
+      <button class="btn btn-secondary active" id="fStatus-ALL" onclick="setStatusFilter('ALL')">All</button>
+      <button class="btn btn-secondary" id="fStatus-VACANT" onclick="setStatusFilter('VACANT')">🟢 Vacant</button>
+      <button class="btn btn-secondary" id="fStatus-RESERVED" onclick="setStatusFilter('RESERVED')">🟡 Reserved</button>
+      <button class="btn btn-secondary" id="fStatus-OCCUPIED" onclick="setStatusFilter('OCCUPIED')">🔴 Occupied</button>
+      <button class="btn btn-secondary" id="fStatus-BLOCKED" onclick="setStatusFilter('BLOCKED')">⚪ Blocked</button>
     </div>
-    <span id="disabledSummary" style="font-size: 0.88rem; color: var(--text-secondary);">3 Slots</span>
+
+    <!-- Live Search -->
+    <div style="display: flex; gap: 0.5rem; align-items: center;">
+      <input type="text" id="slotSearchInput" class="form-input" placeholder="Search slot ID or registration..." style="width: 260px; padding: 0.45rem 0.85rem; font-size: 0.85rem;" oninput="applyFilters()">
+    </div>
   </div>
-  <div class="slots-grid" id="gridDisabled"></div>
 </div>
 
-<div class="parking-section">
-  <div class="section-header">
-    <div class="section-title">
-      <span>⚡</span>
-      <span>EV Charging Parking Spaces (Level 2 Chargers)</span>
+<!-- Spatial Parking Map Floorplan -->
+<div class="parking-map-container">
+  <!-- Gate & Inbound Indicators -->
+  <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 1rem; background-color: #0E1729; border: 1px dashed #38BDF8; border-radius: var(--radius-sm); margin-bottom: 1.25rem;">
+    <div style="display: flex; align-items: center; gap: 0.6rem; color: #38BDF8; font-weight: 800; font-size: 0.9rem;">
+      <span>🚘</span> <span>GATE 01: INBOUND VEHICLE ARRIVAL ENTRANCE</span>
     </div>
-    <span id="evSummary" style="font-size: 0.88rem; color: var(--text-secondary);">3 Slots</span>
+    <div style="font-size: 0.8rem; color: #10B981; font-weight: 700;">● ANPR SCANNER & GATE BARRIER ACTIVE</div>
   </div>
-  <div class="slots-grid" id="gridEV"></div>
-</div>
 
-<div class="parking-section">
-  <div class="section-header">
-    <div class="section-title">
-      <span>🚗</span>
-      <span>Normal Parking Spaces</span>
+  <!-- Priority Accessible Parking (Row A) -->
+  <div style="margin-bottom: 1.75rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+      <div style="font-size: 1.05rem; font-weight: 800; color: #38BDF8; display: flex; align-items: center; gap: 0.5rem;">
+        <span>♿</span> <span>ROW A &mdash; Priority Accessible Spaces (Disabled Parking)</span>
+      </div>
+      <span id="badgeDisabledCount" class="badge badge-vacant">-- Available</span>
     </div>
-    <span id="normalSummary" style="font-size: 0.88rem; color: var(--text-secondary);">9 Slots</span>
+    <div class="slots-grid" id="gridDisabled"></div>
   </div>
-  <div class="slots-grid" id="gridNormal"></div>
+
+  <!-- Driveway Lane 1 -->
+  <div class="lane-indicator">&larr; MAIN FACILITY DRIVEWAY &bull; ROW A &harr; ROW B &bull; TWO-WAY TRAFFIC &rarr;</div>
+
+  <!-- EV Charging Parking (Row B) -->
+  <div style="margin-bottom: 1.75rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+      <div style="font-size: 1.05rem; font-weight: 800; color: #10B981; display: flex; align-items: center; gap: 0.5rem;">
+        <span>⚡</span> <span>ROW B &mdash; Dedicated Fast-Charging Spaces (EV Charging Parking)</span>
+      </div>
+      <span id="badgeEVCount" class="badge badge-vacant">-- Available</span>
+    </div>
+    <div class="slots-grid" id="gridEV"></div>
+  </div>
+
+  <!-- Driveway Lane 2 -->
+  <div class="lane-indicator">&larr; SECONDARY DRIVEWAY &bull; ROW B &harr; ROW C &bull; PEDESTRIAN CROSSWAY &rarr;</div>
+
+  <!-- Standard Parking (Row C) -->
+  <div style="margin-bottom: 1.5rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+      <div style="font-size: 1.05rem; font-weight: 800; color: #94A3B8; display: flex; align-items: center; gap: 0.5rem;">
+        <span>🚗</span> <span>ROW C &mdash; Standard Vehicle Spaces (Normal Parking)</span>
+      </div>
+      <span id="badgeNormalCount" class="badge badge-vacant">-- Available</span>
+    </div>
+    <div class="slots-grid" id="gridNormal"></div>
+  </div>
+
+  <!-- Outbound Exit Indicator -->
+  <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 1rem; background-color: #0E1729; border: 1px dashed #10B981; border-radius: var(--radius-sm); margin-top: 1.25rem;">
+    <div style="display: flex; align-items: center; gap: 0.6rem; color: #10B981; font-weight: 800; font-size: 0.9rem;">
+      <span>🏁</span> <span>GATE 02: OUTBOUND DEPARTURE EXIT & TARIFF PAYMENT KIOSK</span>
+    </div>
+    <div style="font-size: 0.8rem; color: #22D3EE; font-weight: 700;">● AUTOMATED BARRIER RELEASE ENABLED</div>
+  </div>
 </div>
 
 <!-- Slot Details Modal -->
 <div id="slotDetailModal" class="modal-overlay">
   <div class="modal-content">
-    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.25rem;">
-      <div>
-        <h2 id="modalSlotNumber" style="font-size: 1.75rem; font-weight: 800;">Slot --</h2>
-        <p id="modalSlotCategory" style="color: var(--text-secondary); font-size: 0.9rem;">--</p>
-      </div>
-      <span id="modalSlotBadge" class="badge">--</span>
+    <div class="modal-header">
+      <h3 id="modalSlotTitle" style="margin: 0; font-size: 1.25rem; color: #22D3EE; font-weight: 800;">Stall Telemetry</h3>
+      <button class="btn btn-secondary" style="padding: 0.2rem 0.5rem;" onclick="closeModal('slotDetailModal')">&times;</button>
     </div>
-
-    <div style="background-color: #0b1120; border-radius: 8px; padding: 1.1rem; border: 1px solid var(--border-color); margin-bottom: 1.25rem;">
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; font-size: 0.9rem;">
-        <div>
-          <span style="color: var(--text-muted); font-size: 0.8rem; display: block;">ASSIGNED VEHICLE</span>
-          <strong id="modalVehicleReg" style="color: #38bdf8; font-size: 1.1rem;">None</strong>
-        </div>
-        <div>
-          <span style="color: var(--text-muted); font-size: 0.8rem; display: block;">TICKET ID</span>
-          <span id="modalTicketId">--</span>
-        </div>
-        <div>
-          <span style="color: var(--text-muted); font-size: 0.8rem; display: block;">RESERVED AT</span>
-          <span id="modalEntryTime">--</span>
-        </div>
-        <div>
-          <span style="color: var(--text-muted); font-size: 0.8rem; display: block;">PARKED AT</span>
-          <span id="modalParkedTime">--</span>
-        </div>
-      </div>
+    <div class="modal-body" id="modalSlotBody">
+      <!-- Injected -->
     </div>
-
-    <!-- Active Alerts for this slot -->
-    <div id="modalAlertsSection" style="margin-bottom: 1.25rem; display: none;">
-      <h4 style="font-size: 0.9rem; color: #ef4444; margin-bottom: 0.5rem;">Associated Incidents & Alerts:</h4>
-      <div id="modalAlertsList" style="display: flex; flex-direction: column; gap: 0.4rem;"></div>
-    </div>
-
-    <!-- Slot Quick Action Buttons -->
-    <div style="display: flex; gap: 0.5rem;" id="modalActionButtons">
-      <button class="btn btn-primary" id="btnModalPark" style="flex: 1;" onclick="modalActionPark()">Mark Parked</button>
-      <button class="btn btn-warning" id="btnModalBlock" style="flex: 1;" onclick="modalActionToggleBlock()">Toggle Block</button>
-      <button class="btn btn-secondary" onclick="closeSlotModal()">Close</button>
+    <div class="modal-footer" id="modalSlotFooter">
+      <!-- Dynamic contextual actions -->
     </div>
   </div>
 </div>
@@ -145,216 +160,243 @@
 
 {% block scripts %}
 <script>
-let allSlotsData = [];
-let activeSelectedSlot = null;
+let allSlots = [];
+let activeStatusFilter = "ALL";
 
-async function loadParkingGrid() {
+async function loadParkingMap() {
   try {
     const res = await fetch("/api/parking/slots");
     const data = await res.json();
     if (data.success) {
-      allSlotsData = data.slots;
-      renderSlots(allSlotsData);
+      allSlots = data.slots;
+      document.getElementById("lastUpdatedText").textContent = new Date().toLocaleTimeString();
+      applyFilters();
     }
   } catch (err) {
-    console.error("Grid load error:", err);
+    console.error("Failed to load parking slots:", err);
   }
 }
 
-function renderSlots(slots) {
-  const gridDisabled = document.getElementById("gridDisabled");
-  const gridEV = document.getElementById("gridEV");
-  const gridNormal = document.getElementById("gridNormal");
+function setStatusFilter(status) {
+  activeStatusFilter = status;
+  document.querySelectorAll("[id^='fStatus-']").forEach(b => b.classList.remove("active"));
+  const btn = document.getElementById(`fStatus-${status}`);
+  if (btn) btn.classList.add("active");
+  applyFilters();
+}
 
-  gridDisabled.innerHTML = "";
-  gridEV.innerHTML = "";
-  gridNormal.innerHTML = "";
+function applyFilters() {
+  const searchTerm = (document.getElementById("slotSearchInput")?.value || "").trim().toUpperCase();
 
-  slots.forEach(slot => {
-    const card = document.createElement("div");
-    card.className = `slot-card status-${slot.status.toLowerCase()}`;
-    card.onclick = () => openSlotModal(slot.id);
+  let filtered = allSlots;
+  if (activeStatusFilter !== "ALL") {
+    filtered = filtered.filter(s => s.status === activeStatusFilter);
+  }
+  if (searchTerm) {
+    filtered = filtered.filter(s => 
+      s.slot_number.toUpperCase().includes(searchTerm) || 
+      (s.registration_number && s.registration_number.toUpperCase().includes(searchTerm)) ||
+      (s.ticket_id && s.ticket_id.toUpperCase().includes(searchTerm))
+    );
+  }
 
-    const statusBadgeClass = `badge badge-${slot.status.toLowerCase()}`;
+  // Update Section Counters
+  updateRowCounters();
 
-    let vehicleHtml = "";
-    if (slot.registration_number) {
-      vehicleHtml = `<div class="slot-vehicle">${slot.registration_number}</div>`;
-    } else if (slot.status === "VACANT") {
-      vehicleHtml = `<span style="font-size: 0.82rem; color: var(--text-muted); margin-top: 0.5rem; display: block;">Empty Space</span>`;
-    } else if (slot.status === "BLOCKED") {
-      vehicleHtml = `<span style="font-size: 0.82rem; color: #fca5a5; margin-top: 0.5rem; display: block;">⚠️ Obstructed</span>`;
+  // Render Rows
+  const dGrid = document.getElementById("gridDisabled");
+  const evGrid = document.getElementById("gridEV");
+  const nGrid = document.getElementById("gridNormal");
+
+  renderSlotRow(dGrid, filtered.filter(s => s.category === "Disabled Parking"), "♿");
+  renderSlotRow(evGrid, filtered.filter(s => s.category === "EV Charging Parking"), "⚡");
+  renderSlotRow(nGrid, filtered.filter(s => s.category === "Normal Parking"), "🚗");
+}
+
+function updateRowCounters() {
+  const dVac = allSlots.filter(s => s.category === "Disabled Parking" && s.status === "VACANT").length;
+  const dTot = allSlots.filter(s => s.category === "Disabled Parking").length;
+  document.getElementById("badgeDisabledCount").textContent = `${dVac}/${dTot} Vacant`;
+
+  const evVac = allSlots.filter(s => s.category === "EV Charging Parking" && s.status === "VACANT").length;
+  const evTot = allSlots.filter(s => s.category === "EV Charging Parking").length;
+  document.getElementById("badgeEVCount").textContent = `${evVac}/${evTot} Vacant`;
+
+  const nVac = allSlots.filter(s => s.category === "Normal Parking" && s.status === "VACANT").length;
+  const nTot = allSlots.filter(s => s.category === "Normal Parking").length;
+  document.getElementById("badgeNormalCount").textContent = `${nVac}/${nTot} Vacant`;
+}
+
+function renderSlotRow(container, slots, icon) {
+  if (!slots.length) {
+    container.innerHTML = `<div style="grid-column: 1 / -1; color: var(--text-muted); font-size: 0.88rem; padding: 1rem; background-color: #0E1729; border-radius: 6px; text-align: center;">No stalls matching current filters in this row.</div>`;
+    return;
+  }
+
+  container.innerHTML = slots.map(s => {
+    const statLower = s.status.toLowerCase();
+    let plateContent = `<span style="color:var(--text-muted); font-size:0.8rem;">Available for parking</span>`;
+    if (s.registration_number) {
+      plateContent = `<span class="plate-tag">${s.registration_number}</span>`;
+    } else if (s.status === "BLOCKED") {
+      plateContent = `<span style="color:#F43F5E; font-size:0.82rem; font-weight:700;">⚠️ Obstacle Detected</span>`;
     }
 
-    let alertIndicator = "";
-    if (slot.alert_count > 0) {
-      alertIndicator = `<span style="position: absolute; top: 8px; right: 8px; width: 10px; height: 10px; border-radius: 50%; background: #ef4444; box-shadow: 0 0 6px #ef4444;" title="${slot.alert_count} active alert(s)"></span>`;
-    }
-
-    card.innerHTML = `
-      ${alertIndicator}
-      <div class="slot-top">
-        <div class="slot-number">${slot.slot_number}</div>
-        <span class="${statusBadgeClass}">${slot.status}</span>
-      </div>
-      <div>
-        ${vehicleHtml}
+    return `
+      <div class="slot-item status-${statLower}" onclick="openSlotModal(${s.id})">
+        <div class="slot-item-header">
+          <span class="slot-code">${icon} ${s.slot_number}</span>
+          <span class="badge badge-${statLower}">${s.status}</span>
+        </div>
+        <div class="slot-plate">${plateContent}</div>
+        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem; display: flex; justify-content: space-between;">
+          <span>${s.category.split(' ')[0]}</span>
+          <span style="color: #22D3EE;">Inspect 🔍</span>
+        </div>
       </div>
     `;
-
-    if (slot.category === "Disabled Parking") {
-      gridDisabled.appendChild(card);
-    } else if (slot.category === "EV Charging Parking") {
-      gridEV.appendChild(card);
-    } else {
-      gridNormal.appendChild(card);
-    }
-  });
+  }).join("");
 }
 
 function openSlotModal(slotId) {
-  const slot = allSlotsData.find(s => s.id === slotId);
+  const slot = allSlots.find(s => s.id === slotId);
   if (!slot) return;
 
-  activeSelectedSlot = slot;
-  document.getElementById("modalSlotNumber").textContent = `Slot ${slot.slot_number}`;
-  document.getElementById("modalSlotCategory").textContent = slot.category;
-  
-  const badgeEl = document.getElementById("modalSlotBadge");
-  badgeEl.textContent = slot.status;
-  badgeEl.className = `badge badge-${slot.status.toLowerCase()}`;
+  document.getElementById("modalSlotTitle").textContent = `Stall ${slot.slot_number} Telemetry & Actions`;
+  const body = document.getElementById("modalSlotBody");
+  const footer = document.getElementById("modalSlotFooter");
 
-  document.getElementById("modalVehicleReg").textContent = slot.registration_number || "None";
-  document.getElementById("modalTicketId").textContent = slot.ticket_id || "--";
-  document.getElementById("modalEntryTime").textContent = slot.entry_time || "--";
-  document.getElementById("modalParkedTime").textContent = slot.parked_start_time || (slot.status === "RESERVED" ? "Awaiting Arrival" : "--");
-
-  const btnPark = document.getElementById("btnModalPark");
-  btnPark.style.display = slot.status === "RESERVED" ? "inline-flex" : "none";
-
-  const btnBlock = document.getElementById("btnModalBlock");
-  btnBlock.textContent = slot.status === "BLOCKED" ? "Clear Obstruction" : "Block Slot";
-  btnBlock.className = slot.status === "BLOCKED" ? "btn btn-primary" : "btn btn-warning";
-
-  document.getElementById("slotDetailModal").style.display = "flex";
-}
-
-function closeSlotModal() {
-  document.getElementById("slotDetailModal").style.display = "none";
-  activeSelectedSlot = null;
-}
-
-// Modal Quick Actions
-async function modalActionPark() {
-  if (!activeSelectedSlot) return;
-  await triggerSimulation("park_correctly", activeSelectedSlot.id);
-  closeSlotModal();
-}
-
-async function modalActionToggleBlock() {
-  if (!activeSelectedSlot) return;
-  if (activeSelectedSlot.status === "BLOCKED") {
-    await triggerSimulation("clear_object", activeSelectedSlot.id);
-  } else {
-    await triggerSimulation("place_object", activeSelectedSlot.id);
+  let sessionInfo = `<div style="color: var(--text-muted);">No active vehicle session associated.</div>`;
+  if (slot.current_session_id || slot.registration_number) {
+    sessionInfo = `
+      <div style="background-color: #0B1220; border: 1px solid var(--border-subtle); padding: 0.75rem; border-radius: 6px;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem;">
+          <span style="color: var(--text-secondary);">Vehicle Registration:</span>
+          <strong style="color: #22D3EE; font-size: 1.05rem;">${slot.registration_number}</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem;">
+          <span style="color: var(--text-secondary);">Ticket Permit ID:</span>
+          <code>${slot.ticket_id || '--'}</code>
+        </div>
+        <div style="display: flex; justify-content: space-between;">
+          <span style="color: var(--text-secondary);">Parked Start Time:</span>
+          <span>${formatDateTime(slot.parked_start_time)}</span>
+        </div>
+      </div>
+    `;
   }
-  closeSlotModal();
+
+  body.innerHTML = `
+    <div style="display: flex; flex-direction: column; gap: 0.85rem; font-size: 0.92rem;">
+      <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.5rem;">
+        <span style="color: var(--text-secondary);">Stall Category:</span>
+        <strong style="color: #FFFFFF;">${slot.category}</strong>
+      </div>
+      <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.5rem;">
+        <span style="color: var(--text-secondary);">Current Physical State:</span>
+        <span class="badge badge-${slot.status.toLowerCase()}">${slot.status}</span>
+      </div>
+      <div>
+        <label style="display: block; font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.4rem; text-transform: uppercase; font-weight: 700;">Active Vehicle Session</label>
+        ${sessionInfo}
+      </div>
+    </div>
+  `;
+
+  // Permitted contextual actions based on slot state
+  let actionBtns = `<button class="btn btn-secondary" onclick="closeModal('slotDetailModal')">Close</button>`;
+
+  if (slot.status === "RESERVED") {
+    actionBtns = `
+      <button class="btn btn-secondary" onclick="closeModal('slotDetailModal')">Cancel</button>
+      <button class="btn btn-success" onclick="triggerSim('park_correctly', {slot_id: ${slot.id}}); closeModal('slotDetailModal');">
+        ✅ Simulate Vehicle Parked
+      </button>
+    `;
+  } else if (slot.status === "BLOCKED") {
+    actionBtns = `
+      <button class="btn btn-secondary" onclick="closeModal('slotDetailModal')">Cancel</button>
+      <button class="btn btn-warning" onclick="triggerSim('clear_object', {slot_id: ${slot.id}}); closeModal('slotDetailModal');">
+        🔄 Clear Obstruction
+      </button>
+    `;
+  } else if (slot.status === "VACANT") {
+    actionBtns = `
+      <button class="btn btn-secondary" onclick="closeModal('slotDetailModal')">Cancel</button>
+      <button class="btn btn-danger" onclick="triggerSim('place_object', {slot_id: ${slot.id}}); closeModal('slotDetailModal');">
+        ⚠️ Simulate Obstacle Blockage
+      </button>
+    `;
+  }
+
+  footer.innerHTML = actionBtns;
+  openModal("slotDetailModal");
 }
 
-// Simulation Actions
-async function triggerSimulation(action, slotId = null) {
-  // If slotId is not provided, pick first matching slot
-  if (!slotId) {
-    if (action === "park_correctly") {
-      const reserved = allSlotsData.find(s => s.status === "RESERVED");
-      if (!reserved) {
-        showSimFeedback("No currently RESERVED slot to park. Please create an entry ticket first at the Entry Gate.", "warning");
-        return;
-      }
-      slotId = reserved.id;
-    } else if (action === "place_object") {
-      const vacant = allSlotsData.find(s => s.status === "VACANT");
-      slotId = vacant ? vacant.id : 1;
-    } else if (action === "clear_object") {
-      const blocked = allSlotsData.find(s => s.status === "BLOCKED");
-      if (!blocked) {
-        showSimFeedback("No currently BLOCKED slot to clear.", "warning");
-        return;
-      }
-      slotId = blocked.id;
-    }
-  }
+// Simulation Handlers
+async function triggerSim(action, params = {}) {
+  const fb = document.getElementById("simMsg");
+  fb.style.display = "block";
+  fb.style.backgroundColor = "#16243F";
+  fb.style.color = "#38BDF8";
+  fb.innerHTML = `Simulating action: <strong>${action}</strong>...`;
 
   try {
     const res = await fetch("/api/parking/simulate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: action, slot_id: slotId })
+      body: JSON.stringify({ action, ...params })
     });
     const data = await res.json();
-    showSimFeedback(data.message, data.success ? "success" : "danger");
-    loadParkingGrid();
-  } catch (err) {
-    console.error("Simulation error:", err);
-    showSimFeedback("Simulation action failed due to network error.", "danger");
+    if (data.success) {
+      fb.style.backgroundColor = "rgba(16, 185, 129, 0.15)";
+      fb.style.color = "#34D399";
+      fb.innerHTML = `✅ ${data.message}`;
+      showToast(data.message, "success");
+      loadParkingMap();
+    } else {
+      fb.style.backgroundColor = "rgba(244, 63, 94, 0.15)";
+      fb.style.color = "#FB7185";
+      fb.innerHTML = `❌ ${data.message}`;
+      showToast(data.message, "error");
+    }
+  } catch (e) {
+    fb.innerHTML = "❌ Network error";
   }
 }
 
 function promptPlaceObject() {
-  const slotNum = prompt("Enter slot number to obstruct (e.g. N-01, EV-02):");
+  const slotNum = prompt("Enter stall number to block with obstacle (e.g. N-01, D-01):", "N-01");
   if (!slotNum) return;
-  const match = allSlotsData.find(s => s.slot_number.toUpperCase() === slotNum.trim().toUpperCase());
-  if (match) {
-    triggerSimulation("place_object", match.id);
+  const slot = allSlots.find(s => s.slot_number.toUpperCase() === slotNum.trim().toUpperCase());
+  if (slot) {
+    triggerSim("place_object", { slot_id: slot.id });
   } else {
-    alert("Slot not found: " + slotNum);
+    showToast(`Stall '${slotNum}' not found`, "error");
   }
 }
 
 function promptClearObject() {
-  const blocked = allSlotsData.filter(s => s.status === "BLOCKED");
-  if (blocked.length === 0) {
-    showSimFeedback("No slots are currently blocked.", "warning");
-    return;
-  }
-  const slotNum = prompt(`Enter slot number to clear (Currently blocked: ${blocked.map(b => b.slot_number).join(', ')}):`);
+  const slotNum = prompt("Enter blocked stall number to clear (e.g. N-01):", "N-01");
   if (!slotNum) return;
-  const match = blocked.find(s => s.slot_number.toUpperCase() === slotNum.trim().toUpperCase());
-  if (match) {
-    triggerSimulation("clear_object", match.id);
+  const slot = allSlots.find(s => s.slot_number.toUpperCase() === slotNum.trim().toUpperCase());
+  if (slot) {
+    triggerSim("clear_object", { slot_id: slot.id });
   } else {
-    alert("Blocked slot not found: " + slotNum);
+    showToast(`Stall '${slotNum}' not found`, "error");
   }
 }
 
-function confirmResetSimulation() {
-  if (confirm("Reset simulation? This will restore all parking slots to VACANT and resolve simulation alerts.")) {
-    triggerSimulation("reset_simulation");
+function confirmReset() {
+  if (confirm("Reset simulation environment? All stalls will return to clean VACANT baseline.")) {
+    triggerSim("reset_simulation");
   }
 }
 
-function showSimFeedback(msg, type) {
-  const el = document.getElementById("simFeedbackMsg");
-  el.textContent = msg;
-  el.style.display = "block";
-  if (type === "success") {
-    el.style.backgroundColor = "rgba(16, 185, 129, 0.2)";
-    el.style.color = "#6ee7b7";
-  } else if (type === "warning") {
-    el.style.backgroundColor = "rgba(245, 158, 11, 0.2)";
-    el.style.color = "#fcd34d";
-  } else {
-    el.style.backgroundColor = "rgba(239, 68, 68, 0.2)";
-    el.style.color = "#fca5a5";
-  }
-  setTimeout(() => { el.style.display = "none"; }, 5000);
-}
-
-document.getElementById("btnRefreshSlots").addEventListener("click", loadParkingGrid);
-
-// Initial Load & Real-time Auto-Refresh (every 2.5s)
-loadParkingGrid();
-setInterval(loadParkingGrid, 2500);
+document.addEventListener("DOMContentLoaded", () => {
+  loadParkingMap();
+  // Live auto-refresh every 6 seconds
+  setInterval(loadParkingMap, 6000);
+});
 </script>
 {% endblock %}
-

@@ -1,65 +1,87 @@
 {% extends "base.html" %}
 
-{% block title %}SmartPark AI - Operations Portal{% endblock %}
+{% block title %}SmartPark AI - Operations Facility Portal{% endblock %}
 
 {% block content %}
-<div class="page-header">
-  <div>
-    <h1 class="page-title">SmartPark AI Facility Portal</h1>
-    <p class="page-subtitle">Autonomous IoT parking management powered by real-time computer vision ANPR</p>
+<div class="page-header" style="background: linear-gradient(135deg, #111C32 0%, #0B1220 100%); padding: 2rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); margin-bottom: 2rem;">
+  <div style="max-width: 800px;">
+    <div style="display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(34, 211, 238, 0.12); color: #22D3EE; padding: 0.35rem 0.85rem; border-radius: var(--radius-pill); font-size: 0.82rem; font-weight: 700; border: 1px solid rgba(34, 211, 238, 0.3); margin-bottom: 0.75rem;">
+      <span>⚡</span> <span>AUTONOMOUS IOT SMART FACILITY &bull; VERSION 2.0</span>
+    </div>
+    <h1 class="page-title" style="font-size: 2.2rem; line-height: 1.2;">Autonomous Smart Parking & Computer Vision ANPR System</h1>
+    <p class="page-subtitle" style="font-size: 1.05rem; line-height: 1.6; margin-top: 0.6rem; color: #94A3B8;">
+      An end-to-end intelligent IoT parking facility simulator featuring real-time deep learning number plate detection (YOLOv8 Nano), position-aware OCR text recognition (EasyOCR), strict category-isolated spatial allocation, and automated duration billing.
+    </p>
   </div>
 </div>
 
+<!-- 4 Core Navigation Interfaces -->
 <div class="grid-4" style="margin-bottom: 2rem;">
-  <div class="card" style="text-align: center; border-top: 4px solid #38bdf8;">
-    <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">🚘</div>
-    <h3 style="margin-bottom: 0.5rem;">Driver Entry</h3>
-    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.25rem;">Automated webcam ANPR scanning, category selection, and slot reservation.</p>
-    <a href="/entry" class="btn btn-primary" style="width: 100%;">Open Entry Gate</a>
+  <div class="card" style="border-top: 4px solid #38BDF8; display: flex; flex-direction: column; justify-content: space-between;">
+    <div>
+      <div style="width: 48px; height: 48px; border-radius: var(--radius-sm); background: rgba(56, 189, 248, 0.15); display: flex; align-items: center; justify-content: center; font-size: 1.6rem; margin-bottom: 1rem;">🚘</div>
+      <h3 style="font-size: 1.2rem; font-weight: 800; margin-bottom: 0.5rem; color: #FFFFFF;">Driver Entry Gate</h3>
+      <p style="color: var(--text-secondary); font-size: 0.88rem; line-height: 1.5; margin-bottom: 1.25rem;">
+        Automated inbound webcam scanning, YOLO license plate detection, category validation, and digital permit issuance.
+      </p>
+    </div>
+    <a href="/entry" class="btn btn-primary" style="width: 100%;">Open Entry Kiosk &rarr;</a>
   </div>
 
-  <div class="card" style="text-align: center; border-top: 4px solid #10b981;">
-    <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">🅿️</div>
-    <h3 style="margin-bottom: 0.5rem;">Parking Area</h3>
-    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.25rem;">Live interactive spatial grid with simulation engine for incidents & violations.</p>
-    <a href="/parking" class="btn btn-primary" style="width: 100%;">View Live Grid</a>
+  <div class="card" style="border-top: 4px solid #10B981; display: flex; flex-direction: column; justify-content: space-between;">
+    <div>
+      <div style="width: 48px; height: 48px; border-radius: var(--radius-sm); background: rgba(16, 185, 129, 0.15); display: flex; align-items: center; justify-content: center; font-size: 1.6rem; margin-bottom: 1rem;">🅿️</div>
+      <h3 style="font-size: 1.2rem; font-weight: 800; margin-bottom: 0.5rem; color: #FFFFFF;">Live Parking Map</h3>
+      <p style="color: var(--text-secondary); font-size: 0.88rem; line-height: 1.5; margin-bottom: 1.25rem;">
+        Interactive spatial lot floorplan showing ultrasonic stall sensors, vehicle occupancy states, and simulation controls.
+      </p>
+    </div>
+    <a href="/parking" class="btn btn-primary" style="width: 100%;">View Live Map &rarr;</a>
   </div>
 
-  <div class="card" style="text-align: center; border-top: 4px solid #f59e0b;">
-    <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">🛡️</div>
-    <h3 style="margin-bottom: 0.5rem;">Guard Station</h3>
-    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.25rem;">Security dashboard, live facility analytics, alert resolution & dynamic pricing.</p>
-    <a href="/guard" class="btn btn-primary" style="width: 100%;">Guard Login</a>
+  <div class="card" style="border-top: 4px solid #F59E0B; display: flex; flex-direction: column; justify-content: space-between;">
+    <div>
+      <div style="width: 48px; height: 48px; border-radius: var(--radius-sm); background: rgba(245, 158, 11, 0.15); display: flex; align-items: center; justify-content: center; font-size: 1.6rem; margin-bottom: 1rem;">🛡️</div>
+      <h3 style="font-size: 1.2rem; font-weight: 800; margin-bottom: 0.5rem; color: #FFFFFF;">Guard Command Center</h3>
+      <p style="color: var(--text-secondary); font-size: 0.88rem; line-height: 1.5; margin-bottom: 1.25rem;">
+        Security command station, real-time KPI analytics, incident management, tariff policies, and operational audit logs.
+      </p>
+    </div>
+    <a href="/guard" class="btn btn-primary" style="width: 100%;">Guard Station &rarr;</a>
   </div>
 
-  <div class="card" style="text-align: center; border-top: 4px solid #ef4444;">
-    <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">🏁</div>
-    <h3 style="margin-bottom: 0.5rem;">Driver Exit</h3>
-    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.25rem;">Exit ANPR verification, session duration billing & automated slot release.</p>
-    <a href="/exit" class="btn btn-primary" style="width: 100%;">Open Exit Gate</a>
+  <div class="card" style="border-top: 4px solid #10B981; display: flex; flex-direction: column; justify-content: space-between;">
+    <div>
+      <div style="width: 48px; height: 48px; border-radius: var(--radius-sm); background: rgba(16, 185, 129, 0.15); display: flex; align-items: center; justify-content: center; font-size: 1.6rem; margin-bottom: 1rem;">🏁</div>
+      <h3 style="font-size: 1.2rem; font-weight: 800; margin-bottom: 0.5rem; color: #FFFFFF;">Driver Exit Gate</h3>
+      <p style="color: var(--text-secondary); font-size: 0.88rem; line-height: 1.5; margin-bottom: 1.25rem;">
+        Outbound vehicle departure verification, duration billing settlement, complimentary tariff calculation, and stall release.
+      </p>
+    </div>
+    <a href="/exit" class="btn btn-primary" style="width: 100%;">Open Exit Kiosk &rarr;</a>
   </div>
 </div>
 
-<div class="card" style="margin-bottom: 2rem;">
-  <h3 style="margin-bottom: 1rem;">System Architecture & Flow</h3>
-  <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 1rem; text-align: center;">
-    <div style="flex: 1; min-width: 180px; padding: 1rem; background-color: var(--bg-card); border-radius: 8px;">
-      <div style="font-weight: 700; color: #38bdf8; margin-bottom: 0.35rem;">1. Detection</div>
-      <div style="font-size: 0.85rem; color: var(--text-secondary);">Custom YOLOv8 local plate detector extracts high-accuracy bounding box</div>
+<!-- Architecture & Pipeline Cards -->
+<div class="card">
+  <h3 class="card-title" style="margin-bottom: 1.25rem; color: #22D3EE;">SmartPark AI Multi-Stage Computer Vision Pipeline</h3>
+  <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; text-align: left;">
+    <div style="padding: 1.1rem; background-color: #0E1729; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm);">
+      <div style="font-weight: 800; color: #38BDF8; margin-bottom: 0.35rem; font-size: 0.95rem;">1. YOLOv8 Detection</div>
+      <div style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.4;">Custom lightweight PyTorch model trained on authentic Indian vehicles extracts high-precision plate bounding boxes (mAP@50: 91.2%).</div>
     </div>
-    <div style="flex: 1; min-width: 180px; padding: 1rem; background-color: var(--bg-card); border-radius: 8px;">
-      <div style="font-weight: 700; color: #38bdf8; margin-bottom: 0.35rem;">2. OCR & Validation</div>
-      <div style="font-size: 0.85rem; color: var(--text-secondary);">OpenCV CLAHE + EasyOCR with Indian RTO position-aware character normalization</div>
+    <div style="padding: 1.1rem; background-color: #0E1729; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm);">
+      <div style="font-weight: 800; color: #22D3EE; margin-bottom: 0.35rem; font-size: 0.95rem;">2. OpenCV Preprocessing</div>
+      <div style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.4;">Bilateral noise reduction, CLAHE contrast enhancement, and adaptive thresholding for clear character separation.</div>
     </div>
-    <div style="flex: 1; min-width: 180px; padding: 1rem; background-color: var(--bg-card); border-radius: 8px;">
-      <div style="font-weight: 700; color: #38bdf8; margin-bottom: 0.35rem;">3. Spatial Allocation</div>
-      <div style="font-size: 0.85rem; color: var(--text-secondary);">Strict category compatibility (Disabled, EV, Normal) with zero cross-allocation</div>
+    <div style="padding: 1.1rem; background-color: #0E1729; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm);">
+      <div style="font-weight: 800; color: #10B981; margin-bottom: 0.35rem; font-size: 0.95rem;">3. OCR & Disambiguation</div>
+      <div style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.4;">EasyOCR character recognition with Indian RTO position-aware character disambiguation (O/0, I/1, Z/2, S/5, B/8).</div>
     </div>
-    <div style="flex: 1; min-width: 180px; padding: 1rem; background-color: var(--bg-card); border-radius: 8px;">
-      <div style="font-weight: 700; color: #38bdf8; margin-bottom: 0.35rem;">4. Billing Engine</div>
-      <div style="font-size: 0.85rem; color: var(--text-secondary);">60m free + 10m grace = 70m free; pricing snapshots lock session integrity</div>
+    <div style="padding: 1.1rem; background-color: #0E1729; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm);">
+      <div style="font-weight: 800; color: #F59E0B; margin-bottom: 0.35rem; font-size: 0.95rem;">4. Deterministic Allocation</div>
+      <div style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.4;">Atomic database locking guarantees strict category isolation across Disabled, EV Charging, and Normal parking.</div>
     </div>
   </div>
 </div>
 {% endblock %}
-
