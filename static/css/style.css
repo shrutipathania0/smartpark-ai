@@ -94,8 +94,8 @@ body {
   flex-direction: column;
   -webkit-font-smoothing: antialiased;
   background-image: 
-    linear-gradient(180deg, rgba(11, 18, 32, 0.45) 0%, rgba(15, 23, 42, 0.55) 100%),
-    url('/static/images/smartpark-aerial-parking.jpg');
+    linear-gradient(180deg, rgba(11, 18, 32, 0.28) 0%, rgba(15, 23, 42, 0.38) 100%),
+    url('/static/images/smartpark-garage-3d.jpg');
   background-size: cover;
   background-position: center 0px;
   background-attachment: fixed;

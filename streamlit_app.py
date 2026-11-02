@@ -50,9 +50,9 @@ st.set_page_config(
 )
 
 # Helper to load background image as base64
-def get_base64_bg(image_path: str = "static/images/smartpark-aerial-parking.jpg") -> str:
+def get_base64_bg(image_path: str = "static/images/smartpark-garage-3d.jpg") -> str:
     if not os.path.exists(image_path):
-        image_path = "static/images/smartpark-garage-bg.png"
+        image_path = "static/images/smartpark_bg.jpg"
     if os.path.exists(image_path):
         with open(image_path, "rb") as img_file:
             return base64.b64encode(img_file.read()).decode("utf-8")
@@ -60,61 +60,90 @@ def get_base64_bg(image_path: str = "static/images/smartpark-aerial-parking.jpg"
 
 _bg_b64 = get_base64_bg()
 _bg_css = f"""
+    [data-testid="stHeader"] {{
+        background: transparent !important;
+    }}
     [data-testid="stAppViewContainer"] {{
-        background-image: linear-gradient(180deg, rgba(11, 18, 32, 0.42) 0%, rgba(15, 23, 42, 0.50) 100%), url("data:image/jpeg;base64,{_bg_b64}");
+        background-image: linear-gradient(180deg, rgba(11, 18, 32, 0.28) 0%, rgba(15, 23, 42, 0.38) 100%), url("data:image/jpeg;base64,{_bg_b64}");
         background-size: cover;
         background-position: center center;
         background-attachment: fixed;
+    }}
+    .main .block-container,
+    [data-testid="stMainBlockContainer"] {{
+        background: transparent !important;
+        padding-top: 1.5rem !important;
+        padding-bottom: 3rem !important;
     }}
 """ if _bg_b64 else ""
 
 # Custom High-Contrast CSS Theme for modern, responsive, and ultra-readable UI
 st.markdown("<style>\n" + _bg_css + """
-    /* Main Content Readability Container & Glass Backdrop */
-    .main .block-container,
-    [data-testid="stMainBlockContainer"] {
-        background: rgba(11, 18, 32, 0.78) !important;
-        backdrop-filter: blur(8px) !important;
-        -webkit-backdrop-filter: blur(8px) !important;
-        border-radius: 16px !important;
-        padding: 2.2rem 2.5rem 3rem 2.5rem !important;
-        margin-top: 1.25rem !important;
-        margin-bottom: 2.5rem !important;
-        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6) !important;
-        border: 1.5px solid rgba(245, 158, 11, 0.35) !important;
+    /* Semi-transparent frosted smart-city glass cards for content columns */
+    div[data-testid="column"] {
+        background: rgba(15, 23, 42, 0.72) !important;
+        backdrop-filter: blur(12px) !important;
+        -webkit-backdrop-filter: blur(12px) !important;
+        border-radius: 14px !important;
+        padding: 20px 22px !important;
+        border: 1.5px solid rgba(56, 189, 248, 0.25) !important;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45) !important;
+        margin-bottom: 14px !important;
     }
 
-    /* Crisp, High-Contrast Typography in Main Workspace */
-    .main h1, .main h2, .main h3, .main h4 {
+    /* Ultra-Visible High-Contrast Typography */
+    h1, [data-testid="stHeadingWithActionElements"] h1, [data-testid="stMarkdownContainer"] h1 {
         color: #FFFFFF !important;
-        font-weight: 800 !important;
+        font-weight: 900 !important;
         letter-spacing: -0.3px !important;
-        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8) !important;
+        text-shadow: 0 2px 12px rgba(0, 0, 0, 0.95), 0 0 4px rgba(0, 0, 0, 0.9) !important;
     }
-    .main p,
-    .main span:not(.plate-badge):not(.status-badge-vacant):not(.status-badge-reserved):not(.status-badge-occupied):not(.status-badge-blocked),
-    .main div[data-testid="stMarkdownContainer"] p {
-        color: #F1F5F9 !important;
+    h2, h3, h4, [data-testid="stHeadingWithActionElements"] h2, [data-testid="stHeadingWithActionElements"] h3, [data-testid="stMarkdownContainer"] h2, [data-testid="stMarkdownContainer"] h3 {
+        color: #38BDF8 !important;
+        font-weight: 800 !important;
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.95) !important;
     }
-    .main [data-testid="stCaptionContainer"] p {
-        color: #94A3B8 !important;
+    .main p, [data-testid="stMarkdownContainer"] p {
+        color: #F8FAFC !important;
+        text-shadow: 0 1px 4px rgba(0, 0, 0, 0.85) !important;
+    }
+    .main [data-testid="stCaptionContainer"] p,
+    .main caption, .main small {
+        color: #CBD5E1 !important;
         font-weight: 600 !important;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85) !important;
     }
 
     /* All Widget & Input Labels in Main Area */
-    .main [data-testid="stWidgetLabel"] label,
-    .main [data-testid="stWidgetLabel"] p,
-    .main [data-testid="stWidgetLabel"] span {
-        color: #38BDF8 !important;
-        font-weight: 700 !important;
-        font-size: 0.94rem !important;
+    [data-testid="stWidgetLabel"] label,
+    [data-testid="stWidgetLabel"] p,
+    [data-testid="stWidgetLabel"] span {
+        color: #22D3EE !important;
+        font-weight: 800 !important;
+        font-size: 0.95rem !important;
+        text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9) !important;
     }
 
     /* Radio button options in main body */
     .main div[role="radiogroup"] label,
-    .main div[role="radiogroup"] label * {
+    .main div[role="radiogroup"] label *,
+    .main [data-baseweb="radio"] * {
         color: #FFFFFF !important;
-        font-weight: 600 !important;
+        font-weight: 700 !important;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9) !important;
+    }
+
+    /* High-contrast Input fields */
+    .main input[type="text"], .main input, .main textarea {
+        background-color: #0F172A !important;
+        color: #FFFFFF !important;
+        border: 1.5px solid #38BDF8 !important;
+        border-radius: 8px !important;
+        font-weight: 700 !important;
+        font-size: 0.95rem !important;
+    }
+    .main input::placeholder {
+        color: #94A3B8 !important;
     }
 
     /* Status Badges */
