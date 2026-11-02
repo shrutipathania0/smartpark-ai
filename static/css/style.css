@@ -84,7 +84,7 @@
 }
 
 body {
-  background-color: var(--bg-deep);
+  background-color: #F3F6FA;
   color: var(--text-primary);
   font-family: var(--font-sans);
   font-size: 15px;
@@ -93,9 +93,13 @@ body {
   display: flex;
   flex-direction: column;
   -webkit-font-smoothing: antialiased;
-  background-image: radial-gradient(#CBD5E1 0.8px, transparent 0.8px), radial-gradient(#CBD5E1 0.8px, #F3F6FA 0.8px);
-  background-size: 32px 32px;
-  background-position: 0 0, 16px 16px;
+  background-image: 
+    linear-gradient(135deg, rgba(243, 246, 250, 0.88) 0%, rgba(226, 232, 240, 0.84) 100%),
+    url('/static/images/smartpark_bg.jpg');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
 }
 
 /* ==============================================================================
@@ -257,18 +261,20 @@ body {
    CARDS & CONTAINERS
    ============================================================================== */
 .card {
-  background-color: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(226, 232, 240, 0.9);
   border-radius: var(--radius-md);
   padding: 1.5rem;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.06);
   color: var(--text-primary);
   transition: transform var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .card:hover {
-  border-color: rgba(34, 211, 238, 0.4);
-  box-shadow: var(--shadow-md);
+  border-color: rgba(34, 211, 238, 0.5);
+  box-shadow: 0 8px 26px rgba(15, 23, 42, 0.1);
 }
 
 .card-title {
@@ -276,6 +282,15 @@ body {
   font-weight: 800;
   color: var(--text-primary);
   margin-bottom: 0.5rem;
+}
+
+.demo-test-panel {
+  background: rgba(248, 250, 252, 0.95);
+  border: 1.5px dashed #0284C7;
+  border-radius: var(--radius-sm);
+  padding: 0.85rem 1rem;
+  margin-bottom: 1.25rem;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.08);
 }
 
 /* Interactive Stat KPI Cards */

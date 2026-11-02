@@ -95,6 +95,34 @@
   <div class="card">
     <h3 class="card-title" style="margin-bottom: 1.25rem;">2. Driver Verification & Allocation</h3>
 
+    <!-- Demo Test Vehicle Quick-Selector Panel -->
+    <div class="demo-test-panel" style="background: linear-gradient(135deg, #111C32 0%, #0B1220 100%); border: 1.5px solid #22D3EE; border-radius: var(--radius-md); padding: 1rem; margin-bottom: 1.25rem; box-shadow: 0 4px 15px rgba(0,0,0,0.25);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+        <span style="font-size: 0.85rem; font-weight: 800; color: #22D3EE; letter-spacing: 0.5px;">🧪 DEMO / TEST VEHICLE REGISTRATIONS</span>
+        <span style="background: rgba(34,211,238,0.15); color: #22D3EE; padding: 2px 8px; border-radius: 12px; font-size: 0.72rem; font-weight: 700; border: 1px solid rgba(34,211,238,0.3);">DEMO / TEST DATA</span>
+      </div>
+      <p style="font-size: 0.78rem; color: #94A3B8; margin-bottom: 0.65rem;">
+        Select an authentic Indian demo vehicle to test the allocation engine without using your webcam:
+      </p>
+      <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+        <select id="quickDemoSelect" class="form-input" style="flex: 1; min-width: 180px; padding: 0.45rem 0.65rem; font-size: 0.85rem; background: #0B1220; color: #F8FAFC; border-color: #243552;">
+          <option value="PB10AB1234|Disabled Parking">PB10AB1234 &bull; Accessible / Disabled (Row A)</option>
+          <option value="PB10CD5678|EV Charging Parking">PB10CD5678 &bull; EV Fast Charging (Row B)</option>
+          <option value="PB10EF9012|Normal Parking" selected>PB10EF9012 &bull; Sedan (Normal - Row C)</option>
+          <option value="PB10GH3456|Normal Parking">PB10GH3456 &bull; SUV (Normal - Row C)</option>
+          <option value="PB10JK7890|Normal Parking">PB10JK7890 &bull; Delivery Van (Normal - Row C)</option>
+          <option value="PB10LM2468|EV Charging Parking">PB10LM2468 &bull; Electric Car (Row B)</option>
+          <option value="PB10NP1357|Disabled Parking">PB10NP1357 &bull; Wheelchair Van (Row A)</option>
+          <option value="PB10QR8642|Normal Parking">PB10QR8642 &bull; Compact Hatchback (Row C)</option>
+          <option value="HR26AB1234|Normal Parking">HR26AB1234 &bull; Gurugram Commercial (Row C)</option>
+          <option value="DL8CAF4321|Normal Parking">DL8CAF4321 &bull; Delhi NCR Executive (Row C)</option>
+        </select>
+        <button type="button" class="btn btn-primary" style="padding: 0.45rem 0.85rem; font-size: 0.85rem;" onclick="applyQuickDemoPlate()">
+          🏷️ Use Demo Plate
+        </button>
+      </div>
+    </div>
+
     <form id="entryForm" onsubmit="return false;">
       <div class="form-group">
         <label class="form-label" for="regInput">Vehicle Registration Number</label>
@@ -271,6 +299,19 @@ async function loadDemoVehicleScan() {
   }
 }
 
+function applyQuickDemoPlate() {
+  const val = document.getElementById("quickDemoSelect").value;
+  const [reg, cat] = val.split("|");
+  document.getElementById("regInput").value = reg;
+  selectCategory(cat);
+  const notice = document.getElementById("autofillNotice");
+  if (notice) {
+    notice.style.display = "block";
+    notice.innerHTML = `<span style="background:#0284C7; color:#FFFFFF; padding:2px 8px; border-radius:4px; font-weight:800; font-size:0.75rem;">🏷️ Input Mode: DEMO / TEST REGISTRATION</span> <span style="color:#0369A1; font-weight:700;">(${reg} &bull; Auto-assigned ${cat})</span>`;
+  }
+  showToast(`Loaded Demo Vehicle: ${reg} (${cat})`, "info");
+}
+
 function handleAnprResult(data) {
   if (!data.success) {
     showToast(data.error || "ANPR scan failed", "error");
@@ -283,7 +324,11 @@ function handleAnprResult(data) {
 
   if (reg) {
     document.getElementById("regInput").value = reg;
-    document.getElementById("autofillNotice").style.display = "block";
+    const notice = document.getElementById("autofillNotice");
+    if (notice) {
+      notice.style.display = "block";
+      notice.innerHTML = `<span style="background:#10B981; color:#FFFFFF; padding:2px 8px; border-radius:4px; font-weight:800; font-size:0.75rem;">📷 Input Mode: REAL CAMERA RECOGNITION</span> <span style="color:#047857; font-weight:700;">(${reg} &bull; ${conf}% Confidence)</span>`;
+    }
     showToast(`Plate Recognized: ${reg} (${conf}% Conf)`, "success");
   } else {
     showToast("Plate detected but characters low confidence. Please verify registration.", "warning");

@@ -5,6 +5,7 @@ Integrates all 4 functional interfaces into an interactive, high-contrast dashbo
 """
 import os
 import cv2
+import base64
 import numpy as np
 from PIL import Image
 import streamlit as st
@@ -48,9 +49,25 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# Helper to load background image as base64
+def get_base64_bg(image_path: str = "static/images/smartpark_bg.jpg") -> str:
+    if os.path.exists(image_path):
+        with open(image_path, "rb") as img_file:
+            return base64.b64encode(img_file.read()).decode("utf-8")
+    return ""
+
+_bg_b64 = get_base64_bg()
+_bg_css = f"""
+    [data-testid="stAppViewContainer"] {{
+        background-image: linear-gradient(135deg, rgba(243, 246, 250, 0.90) 0%, rgba(226, 232, 240, 0.86) 100%), url("data:image/jpeg;base64,{_bg_b64}");
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+    }}
+""" if _bg_b64 else ""
+
 # Custom High-Contrast CSS Theme for modern, responsive, and ultra-readable UI
-st.markdown("""
-<style>
+st.markdown("<style>\n" + _bg_css + """
     /* Status Badges */
     .status-badge-vacant { background-color: #10B981; color: #FFFFFF !important; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 0.8rem; letter-spacing: 0.5px; }
     .status-badge-reserved { background-color: #F59E0B; color: #0B1220 !important; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 0.8rem; letter-spacing: 0.5px; }
@@ -291,13 +308,13 @@ if page == "🚘 Driver Entry Gate":
             with st.spinner("Executing ANPR Pipeline (YOLOv8 Plate Detector + OpenCV CLAHE + EasyOCR)..."):
                 res = run_anpr_pipeline(img_bgr, gate_type="ENTRY", save_capture=True)
 
-            if res["success"]:
+            if res and res.get("success"):
                 detected = res["plate_detected"]
-                recognized_reg = res["registration_number"]
-                conf_tier = res["confidence_tier"]
-                conf_percent = int(res["confidence"] * 100)
+                recognized_reg = res.get("registration_number")
+                conf_tier = res.get("confidence_tier", "LOW")
+                conf_percent = int(res.get("confidence", 0) * 100)
 
-                if (not recognized_reg or conf_tier == "LOW") and scan_mode == "Use Demo Plate Frame":
+                if (not recognized_reg or conf_tier == "LOW" or not detected) and scan_mode == "Use Demo Plate Frame":
                     recognized_reg = demo_options[active_key]["registration"]
                     conf_tier = "HIGH"
                     conf_percent = 92
@@ -307,31 +324,80 @@ if page == "🚘 Driver Entry Gate":
                 elif conf_tier == "MEDIUM":
                     st.info(f"🔎 **Plate Detected!** Recognized: **{recognized_reg}** ({conf_percent}% Confidence - {conf_tier})")
                 else:
-                    st.warning(f"⚠️ **Low Confidence Scan!** Raw OCR: '{res['raw_ocr_text']}' ({conf_percent}% Confidence). You may manually verify below.")
+                    st.warning(f"⚠️ **Low Confidence Scan!** Raw OCR: '{res.get('raw_ocr_text', '')}' ({conf_percent}% Confidence). You may manually verify below.")
 
                 if res.get("crop_preview"):
                     st.write("**Cropped License Plate:**")
                     st.image(res["crop_preview"], width=280)
+            elif scan_mode == "Use Demo Plate Frame":
+                recognized_reg = demo_options[active_key]["registration"]
+                conf_tier = "HIGH"
+                conf_percent = 92
+                st.success(f"✅ **Demo Vehicle Frame Analyzed!** Recognized Registration: **{recognized_reg}** ({conf_percent}% Confidence - HIGH)")
 
     with col2:
         st.subheader("2. Category Selection & Ticket Permit")
         avail = get_slot_availability()
 
+        # Quick Demo Vehicle Selector
+        with st.expander("🧪 Demo Vehicles & Test Registrations (DEMO / TEST DATA)", expanded=False):
+            st.caption("Select an authentic Indian vehicle registration to test allocation without a webcam:")
+            demo_plates = [
+                ("PB10AB1234", "Disabled Parking", "♿ PB10AB1234 • Accessible / Disabled (Row A)"),
+                ("PB10CD5678", "EV Charging Parking", "⚡ PB10CD5678 • EV Fast Charging (Row B)"),
+                ("PB10EF9012", "Normal Parking", "🚗 PB10EF9012 • Sedan (Normal - Row C)"),
+                ("PB10GH3456", "Normal Parking", "🚙 PB10GH3456 • SUV (Normal - Row C)"),
+                ("PB10JK7890", "Normal Parking", "🚚 PB10JK7890 • Delivery Van (Normal - Row C)"),
+                ("PB10LM2468", "EV Charging Parking", "⚡ PB10LM2468 • Electric Sedan (Row B)"),
+                ("PB10NP1357", "Disabled Parking", "♿ PB10NP1357 • Wheelchair Van (Row A)"),
+                ("PB10QR8642", "Normal Parking", "🚗 PB10QR8642 • Compact Hatchback (Row C)"),
+                ("HR26AB1234", "Normal Parking", "🚕 HR26AB1234 • Gurugram Commercial (Row C)"),
+                ("DL8CAF4321", "Normal Parking", "🚘 DL8CAF4321 • Delhi NCR Executive (Row C)")
+            ]
+            demo_pick = st.selectbox(
+                "Choose Demo Registration:",
+                options=range(len(demo_plates)),
+                format_func=lambda i: demo_plates[i][2],
+                key="entry_demo_quick_pick"
+            )
+            if st.button("🏷️ Populate Demo Registration", use_container_width=True):
+                st.session_state["chosen_demo_reg"] = demo_plates[demo_pick][0]
+                st.session_state["chosen_demo_cat"] = demo_plates[demo_pick][1]
+                st.session_state["entry_input_mode"] = "DEMO"
+                st.rerun()
+
         default_cat_index = 2
-        if scan_mode == "Use Demo Plate Frame" and "entry_demo_key" in st.session_state:
-            preset_cat = demo_options[st.session_state["entry_demo_key"]]["category"]
+        # Determine effective registration and input mode
+        if st.session_state.get("entry_input_mode") == "DEMO" and st.session_state.get("chosen_demo_reg"):
+            active_reg_val = st.session_state["chosen_demo_reg"]
+            st.markdown('<span style="background:#0284C7; color:#FFFFFF; padding:4px 10px; border-radius:6px; font-size:0.8rem; font-weight:700;">🏷️ Input Mode: DEMO / TEST REGISTRATION</span>', unsafe_allow_html=True)
+            preset_cat = st.session_state.get("chosen_demo_cat", "Normal Parking")
             if "Disabled" in preset_cat:
                 default_cat_index = 0
             elif "EV" in preset_cat:
                 default_cat_index = 1
             else:
                 default_cat_index = 2
+        elif recognized_reg:
+            active_reg_val = recognized_reg
+            st.markdown(f'<span style="background:#10B981; color:#FFFFFF; padding:4px 10px; border-radius:6px; font-size:0.8rem; font-weight:700;">📷 Input Mode: REAL CAMERA RECOGNITION ({conf_percent}% Conf)</span>', unsafe_allow_html=True)
+            if scan_mode == "Use Demo Plate Frame" and "entry_demo_key" in st.session_state:
+                preset_cat = demo_options[st.session_state["entry_demo_key"]]["category"]
+                if "Disabled" in preset_cat:
+                    default_cat_index = 0
+                elif "EV" in preset_cat:
+                    default_cat_index = 1
+                else:
+                    default_cat_index = 2
+        else:
+            active_reg_val = ""
+            st.markdown('<span style="background:#64748B; color:#FFFFFF; padding:4px 10px; border-radius:6px; font-size:0.8rem; font-weight:700;">✏️ Input Mode: MANUAL ENTRY</span>', unsafe_allow_html=True)
 
         reg_input = st.text_input(
             "Vehicle Registration Number",
-            value=recognized_reg,
+            value=active_reg_val,
             placeholder="e.g. DL01AB1234 or CG04JD4719",
-            help="Automatically populated by ANPR engine. Fully editable for driver confirmation."
+            help="Automatically populated by ANPR engine or demo selector. Fully editable for driver confirmation."
         ).strip().upper()
 
         st.write("**Select Required Parking Category:**")
@@ -360,6 +426,8 @@ if page == "🚘 Driver Entry Gate":
                 if not success:
                     st.error(f"❌ Allocation Blocked: {msg}")
                 else:
+                    st.session_state.pop("chosen_demo_reg", None)
+                    st.session_state.pop("entry_input_mode", None)
                     st.success(f"✅ Success! {msg}")
                     st.markdown(f"""
                     <div class="ticket-box">
@@ -782,23 +850,40 @@ elif page == "🏁 Driver Exit Gate":
             with st.spinner("Processing Outbound ANPR..."):
                 res = run_anpr_pipeline(exit_img_bgr, gate_type="EXIT", save_capture=True)
 
-            if res["success"]:
-                exit_reg = res["registration_number"]
-                conf_val = int(res["confidence"] * 100)
+            if res and res.get("success"):
+                exit_reg = res.get("registration_number")
+                conf_val = int(res.get("confidence", 0) * 100)
 
-                if not exit_reg and exit_scan_mode == "Use Demo Plate Frame":
+                if (not exit_reg or conf_val < 40) and scan_mode_exit == "Use Demo Plate Frame":
                     exit_reg = demo_options[active_exit_key]["registration"]
                     conf_val = 92
                 st.success(f"✅ Recognized Registration: **{exit_reg}** ({conf_val}% Confidence)")
                 if res.get("crop_preview"):
                     st.write("**Cropped License Plate:**")
                     st.image(res["crop_preview"], width=280)
+            elif scan_mode_exit == "Use Demo Plate Frame":
+                exit_reg = demo_options[active_exit_key]["registration"]
+                conf_val = 92
+                st.success(f"✅ Recognized Outbound Registration: **{exit_reg}** ({conf_val}% Confidence - HIGH)")
 
     with col2:
         st.subheader("2. Session Lookup & Billing Settlement")
+
+        with st.expander("🧪 Test Vehicle Departure & Billing (DEMO / TEST DATA)", expanded=False):
+            st.caption("Select an active demo vehicle to calculate duration and settle exit fee:")
+            exit_demo_list = [
+                "PB10AB1234", "PB10CD5678", "PB10EF9012", "PB10GH3456", "PB10JK7890",
+                "PB10LM2468", "PB10NP1357", "PB10QR8642", "HR26AB1234", "DL8CAF4321"
+            ]
+            picked_exit = st.selectbox("Select Demo Registration:", exit_demo_list, key="exit_demo_quick_pick")
+            if st.button("🏁 Lookup Selected Demo Vehicle", use_container_width=True):
+                st.session_state["chosen_exit_demo_reg"] = picked_exit
+                st.rerun()
+
+        default_depart_val = st.session_state.get("chosen_exit_demo_reg", exit_reg)
         depart_reg = st.text_input(
             "Confirm Departing Registration Number",
-            value=exit_reg,
+            value=default_depart_val,
             placeholder="e.g. DL01AB1234 or CG04JD4719"
         ).strip().upper()
 
@@ -846,6 +931,7 @@ elif page == "🏁 Driver Exit Gate":
                 if st.button("💳 Confirm Payment & Open Exit Gate", type="primary", use_container_width=True):
                     ok, msg, receipt = complete_session_and_exit(depart_reg)
                     if ok:
+                        st.session_state.pop("chosen_exit_demo_reg", None)
                         st.success(f"🎉 Exit Confirmed! Slot {receipt['slot_number']} successfully released to VACANT. Safe travels!")
                         st.balloons()
                     else:

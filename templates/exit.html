@@ -91,6 +91,34 @@
   <div class="card">
     <h3 class="card-title" style="margin-bottom: 1.25rem;">2. Session Lookup & Tariff Settlement</h3>
 
+    <!-- Demo Test Vehicle Quick-Departure Panel -->
+    <div class="demo-test-panel" style="background: linear-gradient(135deg, #111C32 0%, #0B1220 100%); border: 1.5px solid #22D3EE; border-radius: var(--radius-md); padding: 1rem; margin-bottom: 1.25rem; box-shadow: 0 4px 15px rgba(0,0,0,0.25);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+        <span style="font-size: 0.85rem; font-weight: 800; color: #22D3EE; letter-spacing: 0.5px;">🧪 TEST VEHICLE DEPARTURE & BILLING</span>
+        <span style="background: rgba(34,211,238,0.15); color: #22D3EE; padding: 2px 8px; border-radius: 12px; font-size: 0.72rem; font-weight: 700; border: 1px solid rgba(34,211,238,0.3);">DEMO / TEST DATA</span>
+      </div>
+      <p style="font-size: 0.78rem; color: #94A3B8; margin-bottom: 0.65rem;">
+        Select an active demo vehicle to calculate duration, generate bill, and release parking stall:
+      </p>
+      <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+        <select id="quickExitSelect" class="form-input" style="flex: 1; min-width: 180px; padding: 0.45rem 0.65rem; font-size: 0.85rem; background: #0B1220; color: #F8FAFC; border-color: #243552;">
+          <option value="PB10AB1234">PB10AB1234 (Accessible Parking - Row A)</option>
+          <option value="PB10CD5678">PB10CD5678 (EV Fast Charging - Row B)</option>
+          <option value="PB10EF9012" selected>PB10EF9012 (Sedan - Normal Row C)</option>
+          <option value="PB10GH3456">PB10GH3456 (SUV - Normal Row C)</option>
+          <option value="PB10JK7890">PB10JK7890 (Delivery Van - Normal Row C)</option>
+          <option value="PB10LM2468">PB10LM2468 (Electric Car - Row B)</option>
+          <option value="PB10NP1357">PB10NP1357 (Wheelchair Van - Row A)</option>
+          <option value="PB10QR8642">PB10QR8642 (Compact Hatchback - Row C)</option>
+          <option value="HR26AB1234">HR26AB1234 (Gurugram Commercial - Row C)</option>
+          <option value="DL8CAF4321">DL8CAF4321 (Delhi NCR Executive - Row C)</option>
+        </select>
+        <button type="button" class="btn btn-primary" style="padding: 0.45rem 0.85rem; font-size: 0.85rem;" onclick="applyQuickExitPlate()">
+          🏁 Lookup Demo Exit
+        </button>
+      </div>
+    </div>
+
     <div class="form-group">
       <label class="form-label" for="exitRegInput">Confirm Departing Vehicle Registration</label>
       <div style="display: flex; gap: 0.5rem;">
@@ -243,49 +271,56 @@ async function lookupActiveSession() {
   }
 }
 
+function applyQuickExitPlate() {
+  const reg = document.getElementById("quickExitSelect").value;
+  document.getElementById("exitRegInput").value = reg;
+  showToast(`Selected Demo Vehicle: ${reg}`, "info");
+  lookupActiveSession();
+}
+
 function renderBillingCard(sess) {
   const container = document.getElementById("billingCardContainer");
   container.style.display = "block";
   const b = sess.bill_preview;
 
   container.innerHTML = `
-    <div style="background: linear-gradient(145deg, #16243F 0%, #0B1220 100%); border: 2px solid #38BDF8; border-radius: var(--radius-md); padding: 1.5rem; box-shadow: var(--shadow-lg);">
-      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border-subtle); padding-bottom: 0.75rem; margin-bottom: 1rem;">
-        <span style="font-size: 1.15rem; font-weight: 800; color: #38BDF8;">ACTIVE TICKET: ${sess.ticket_id}</span>
-        <span class="badge badge-vacant">ACTIVE SESSION</span>
+    <div style="background: linear-gradient(145deg, #111C32 0%, #0B1220 100%); border: 2.5px solid #22D3EE; border-radius: var(--radius-md); padding: 1.5rem; box-shadow: 0 10px 30px rgba(0,0,0,0.45); color: #F8FAFC;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #243552; padding-bottom: 0.75rem; margin-bottom: 1rem;">
+        <span style="font-size: 1.2rem; font-weight: 800; color: #22D3EE; letter-spacing: 0.5px;">ACTIVE TICKET: ${sess.ticket_id}</span>
+        <span class="badge badge-vacant" style="font-size: 0.78rem; font-weight: 700; padding: 4px 10px;">ACTIVE SESSION</span>
       </div>
 
-      <div style="display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.95rem;">
-        <div style="display: flex; justify-content: space-between;">
-          <span style="color: var(--text-secondary);">Assigned Stall:</span>
-          <strong>${sess.slot_number} (${sess.parking_category})</strong>
+      <div style="display: flex; flex-direction: column; gap: 0.65rem; font-size: 0.95rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.4rem; border-bottom: 1px solid #1E293B;">
+          <span style="color: #94A3B8; font-weight: 600;">Assigned Stall:</span>
+          <strong style="color: #FFFFFF; font-size: 1rem;">${sess.slot_number} <span style="color: #38BDF8; font-weight: 600; font-size: 0.88rem;">(${sess.parking_category})</span></strong>
         </div>
-        <div style="display: flex; justify-content: space-between;">
-          <span style="color: var(--text-secondary);">Parked Timestamp:</span>
-          <span>${formatDateTime(sess.parked_start_time)}</span>
+        <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.4rem; border-bottom: 1px solid #1E293B;">
+          <span style="color: #94A3B8; font-weight: 600;">Parked Timestamp:</span>
+          <span style="color: #F1F5F9; font-weight: 600;">${formatDateTime(sess.parked_start_time)}</span>
         </div>
-        <div style="display: flex; justify-content: space-between;">
-          <span style="color: var(--text-secondary);">Total Elapsed Duration:</span>
-          <strong style="color: #FBBF24;">${b.total_duration_formatted}</strong>
+        <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.4rem; border-bottom: 1px solid #1E293B;">
+          <span style="color: #94A3B8; font-weight: 600;">Total Elapsed Duration:</span>
+          <strong style="color: #FBBF24; font-weight: 800; font-size: 1.05rem;">${b.total_duration_formatted}</strong>
         </div>
-        <div style="display: flex; justify-content: space-between;">
-          <span style="color: var(--text-secondary);">Complimentary Free Tariff:</span>
-          <span style="color: #34D399; font-weight: 700;">70 Mins Free (60m + 10m grace)</span>
+        <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.4rem; border-bottom: 1px solid #1E293B;">
+          <span style="color: #94A3B8; font-weight: 600;">Complimentary Free Tariff:</span>
+          <span style="color: #34D399; font-weight: 700;">70 Mins Free (60m free + 10m grace)</span>
         </div>
-        <div style="display: flex; justify-content: space-between;">
-          <span style="color: var(--text-secondary);">Chargeable Duration:</span>
-          <span>${b.chargeable_duration_minutes} mins (${b.billing_blocks} block(s) &times; ₹${b.rate_per_block.toFixed(2)})</span>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="color: #94A3B8; font-weight: 600;">Chargeable Duration:</span>
+          <span style="color: #FFFFFF; font-weight: 700;">${b.chargeable_duration_minutes} mins (${b.billing_blocks} block(s) &times; ₹${b.rate_per_block.toFixed(2)})</span>
         </div>
       </div>
 
-      <hr style="border: none; border-top: 1px solid var(--border-subtle); margin: 1.25rem 0;"/>
+      <hr style="border: none; border-top: 1px solid #243552; margin: 1.25rem 0;"/>
 
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
-        <span style="font-size: 1.15rem; font-weight: 700; color: var(--text-secondary);">Total Fee Payable:</span>
-        <span style="font-size: 2.4rem; font-weight: 900; color: #10B981; letter-spacing: -0.5px;">₹${b.total_fee.toFixed(2)}</span>
+        <span style="font-size: 1.2rem; font-weight: 700; color: #94A3B8;">Total Fee Payable:</span>
+        <span style="font-size: 2.6rem; font-weight: 900; color: #10B981; letter-spacing: -0.5px;">₹${b.total_fee.toFixed(2)}</span>
       </div>
 
-      <button id="btnConfirmExit" class="btn btn-success btn-block" style="padding: 0.85rem; font-size: 1.05rem;" onclick="confirmExitPayment('${sess.registration_number}')">
+      <button id="btnConfirmExit" class="btn btn-success btn-block" style="padding: 0.85rem; font-size: 1.05rem; font-weight: 700;" onclick="confirmExitPayment('${sess.registration_number}')">
         💳 Confirm Payment & Open Exit Gate Barrier
       </button>
     </div>
