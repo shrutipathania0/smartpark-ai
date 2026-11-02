@@ -61,7 +61,7 @@ def get_base64_bg(image_path: str = "static/images/smartpark-garage-bg.png") -> 
 _bg_b64 = get_base64_bg()
 _bg_css = f"""
     [data-testid="stAppViewContainer"] {{
-        background-image: linear-gradient(180deg, rgba(241, 245, 249, 0.32) 0%, rgba(226, 232, 240, 0.38) 100%), url("data:image/png;base64,{_bg_b64}");
+        background-image: linear-gradient(180deg, rgba(248, 250, 252, 0.88) 0%, rgba(241, 245, 249, 0.92) 100%), url("data:image/png;base64,{_bg_b64}");
         background-size: cover;
         background-position: center 0px;
         background-attachment: fixed;
@@ -70,6 +70,51 @@ _bg_css = f"""
 
 # Custom High-Contrast CSS Theme for modern, responsive, and ultra-readable UI
 st.markdown("<style>\n" + _bg_css + """
+    /* Main Content Readability Container & Glass Backdrop */
+    .main .block-container,
+    [data-testid="stMainBlockContainer"] {
+        background: rgba(255, 255, 255, 0.95) !important;
+        backdrop-filter: blur(14px) !important;
+        -webkit-backdrop-filter: blur(14px) !important;
+        border-radius: 16px !important;
+        padding: 2.2rem 2.5rem 3rem 2.5rem !important;
+        margin-top: 1.25rem !important;
+        margin-bottom: 2.5rem !important;
+        box-shadow: 0 12px 35px rgba(15, 23, 42, 0.08), 0 2px 6px rgba(15, 23, 42, 0.04) !important;
+        border: 1px solid rgba(226, 232, 240, 0.95) !important;
+    }
+
+    /* Crisp, High-Contrast Typography in Main Workspace */
+    .main h1, .main h2, .main h3, .main h4 {
+        color: #0F172A !important;
+        font-weight: 800 !important;
+        letter-spacing: -0.3px !important;
+    }
+    .main p, .main span:not(.plate-badge):not(.status-badge-vacant):not(.status-badge-reserved):not(.status-badge-occupied):not(.status-badge-blocked),
+    .main label, .main div[data-testid="stMarkdownContainer"] p {
+        color: #1E293B !important;
+    }
+    .main [data-testid="stCaptionContainer"] p {
+        color: #475569 !important;
+        font-weight: 600 !important;
+    }
+
+    /* All Widget & Input Labels in Main Area */
+    .main [data-testid="stWidgetLabel"] label,
+    .main [data-testid="stWidgetLabel"] p,
+    .main [data-testid="stWidgetLabel"] span {
+        color: #0F172A !important;
+        font-weight: 700 !important;
+        font-size: 0.92rem !important;
+    }
+
+    /* Radio button options in main body */
+    .main div[role="radiogroup"] label,
+    .main div[role="radiogroup"] label * {
+        color: #0F172A !important;
+        font-weight: 600 !important;
+    }
+
     /* Status Badges */
     .status-badge-vacant { background-color: #10B981; color: #FFFFFF !important; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 0.8rem; letter-spacing: 0.5px; }
     .status-badge-reserved { background-color: #F59E0B; color: #0B1220 !important; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 0.8rem; letter-spacing: 0.5px; }
@@ -121,10 +166,10 @@ st.markdown("<style>\n" + _bg_css + """
         color: #0F172A !important;
     }
 
-    /* PART B: Sidebar Navigation Styling */
+    /* PART B: High-Contrast Sidebar Navigation Styling */
     [data-testid="stSidebar"] {
         background: linear-gradient(180deg, #0B1730 0%, #111C32 50%, #132747 100%) !important;
-        border-right: 1px solid rgba(34, 211, 238, 0.2) !important;
+        border-right: 1.5px solid rgba(34, 211, 238, 0.3) !important;
         box-shadow: 4px 0 24px rgba(0, 0, 0, 0.4) !important;
     }
     [data-testid="stSidebar"] [data-testid="stSidebarNav"] {
@@ -136,46 +181,83 @@ st.markdown("<style>\n" + _bg_css + """
     [data-testid="stSidebar"] div[role="radiogroup"] {
         display: flex !important;
         flex-direction: column !important;
-        gap: 8px !important;
-        margin-top: 6px !important;
+        gap: 10px !important;
+        margin-top: 8px !important;
     }
+
+    /* Sidebar Radio Option Card */
     [data-testid="stSidebar"] div[role="radiogroup"] > label {
-        background: rgba(19, 34, 61, 0.72) !important;
-        border: 1px solid rgba(59, 130, 246, 0.2) !important;
-        border-left: 4.5px solid transparent !important;
+        background: #14233B !important;
+        border: 1.5px solid rgba(59, 130, 246, 0.35) !important;
+        border-left: 5px solid transparent !important;
         border-radius: 10px !important;
-        padding: 11px 16px !important;
+        padding: 12px 16px !important;
         margin: 0 !important;
         cursor: pointer !important;
         transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25) !important;
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3) !important;
         position: relative !important;
     }
+
+    /* ALL text inside sidebar radio options MUST be bright pure white */
+    [data-testid="stSidebar"] div[role="radiogroup"] label,
+    [data-testid="stSidebar"] div[role="radiogroup"] label *,
+    [data-testid="stSidebar"] div[role="radiogroup"] [data-baseweb="radio"] *,
+    [data-testid="stSidebar"] div[role="radiogroup"] p,
+    [data-testid="stSidebar"] div[role="radiogroup"] span,
+    [data-testid="stSidebar"] div[role="radiogroup"] div {
+        color: #FFFFFF !important;
+        font-size: 0.96rem !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.3px !important;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6) !important;
+    }
+
     [data-testid="stSidebar"] div[role="radiogroup"] > label:hover {
         transform: translateY(-2.5px) !important;
-        background: rgba(30, 58, 138, 0.5) !important;
-        border-color: rgba(34, 211, 238, 0.5) !important;
-        box-shadow: 0 6px 18px rgba(34, 211, 238, 0.22) !important;
+        background: #1E3A8A !important;
+        border-color: #22D3EE !important;
+        box-shadow: 0 6px 18px rgba(34, 211, 238, 0.35) !important;
     }
+    [data-testid="stSidebar"] div[role="radiogroup"] > label:hover * {
+        color: #FFFFFF !important;
+    }
+
     [data-testid="stSidebar"] div[role="radiogroup"] > label:active {
         transform: scale(0.98) !important;
     }
+
+    /* Active / Checked sidebar item */
     [data-testid="stSidebar"] div[role="radiogroup"] > label:has(input:checked) {
-        background: linear-gradient(90deg, #1E3A8A 0%, #172554 100%) !important;
-        border-color: rgba(34, 211, 238, 0.65) !important;
-        border-left: 4.5px solid #22D3EE !important;
-        font-weight: 700 !important;
-        box-shadow: 0 4px 18px rgba(34, 211, 238, 0.28) !important;
+        background: linear-gradient(90deg, #1E40AF 0%, #172554 100%) !important;
+        border-color: #22D3EE !important;
+        border-left: 5.5px solid #22D3EE !important;
+        box-shadow: 0 6px 20px rgba(34, 211, 238, 0.4) !important;
     }
+    [data-testid="stSidebar"] div[role="radiogroup"] > label:has(input:checked) * {
+        color: #FFFFFF !important;
+        font-weight: 800 !important;
+        text-shadow: 0 0 10px rgba(34, 211, 238, 0.6) !important;
+    }
+
     [data-testid="stSidebar"] div[role="radiogroup"] > label div:first-child {
         display: none !important;
     }
-    [data-testid="stSidebar"] div[role="radiogroup"] > label div[data-testid="stMarkdownContainer"] p {
-        color: #F8FAFC !important;
-        font-size: 0.94rem !important;
-        font-weight: 600 !important;
-        margin: 0 !important;
-        letter-spacing: 0.3px !important;
+
+    /* Generic Sidebar Text Elements */
+    [data-testid="stSidebar"] h1,
+    [data-testid="stSidebar"] h2,
+    [data-testid="stSidebar"] h3,
+    [data-testid="stSidebar"] h4 {
+        color: #FFFFFF !important;
+    }
+    [data-testid="stSidebar"] p,
+    [data-testid="stSidebar"] span {
+        color: #E2E8F0;
+    }
+    [data-testid="stSidebar"] [data-testid="stCaptionContainer"] p,
+    [data-testid="stSidebar"] small {
+        color: #94A3B8 !important;
     }
 
     /* PART A: 2.5D Realistic Parking Bays */
