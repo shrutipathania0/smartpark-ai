@@ -50,9 +50,9 @@ st.set_page_config(
 )
 
 # Helper to load background image as base64
-def get_base64_bg(image_path: str = "static/images/smartpark-garage-bg.png") -> str:
+def get_base64_bg(image_path: str = "static/images/smartpark-aerial-parking.jpg") -> str:
     if not os.path.exists(image_path):
-        image_path = "static/images/smartpark_bg.jpg"
+        image_path = "static/images/smartpark-garage-bg.png"
     if os.path.exists(image_path):
         with open(image_path, "rb") as img_file:
             return base64.b64encode(img_file.read()).decode("utf-8")
@@ -61,9 +61,9 @@ def get_base64_bg(image_path: str = "static/images/smartpark-garage-bg.png") -> 
 _bg_b64 = get_base64_bg()
 _bg_css = f"""
     [data-testid="stAppViewContainer"] {{
-        background-image: linear-gradient(180deg, rgba(248, 250, 252, 0.88) 0%, rgba(241, 245, 249, 0.92) 100%), url("data:image/png;base64,{_bg_b64}");
+        background-image: linear-gradient(180deg, rgba(11, 18, 32, 0.42) 0%, rgba(15, 23, 42, 0.50) 100%), url("data:image/jpeg;base64,{_bg_b64}");
         background-size: cover;
-        background-position: center 0px;
+        background-position: center center;
         background-attachment: fixed;
     }}
 """ if _bg_b64 else ""
@@ -73,29 +73,31 @@ st.markdown("<style>\n" + _bg_css + """
     /* Main Content Readability Container & Glass Backdrop */
     .main .block-container,
     [data-testid="stMainBlockContainer"] {
-        background: rgba(255, 255, 255, 0.95) !important;
-        backdrop-filter: blur(14px) !important;
-        -webkit-backdrop-filter: blur(14px) !important;
+        background: rgba(11, 18, 32, 0.78) !important;
+        backdrop-filter: blur(8px) !important;
+        -webkit-backdrop-filter: blur(8px) !important;
         border-radius: 16px !important;
         padding: 2.2rem 2.5rem 3rem 2.5rem !important;
         margin-top: 1.25rem !important;
         margin-bottom: 2.5rem !important;
-        box-shadow: 0 12px 35px rgba(15, 23, 42, 0.08), 0 2px 6px rgba(15, 23, 42, 0.04) !important;
-        border: 1px solid rgba(226, 232, 240, 0.95) !important;
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6) !important;
+        border: 1.5px solid rgba(245, 158, 11, 0.35) !important;
     }
 
     /* Crisp, High-Contrast Typography in Main Workspace */
     .main h1, .main h2, .main h3, .main h4 {
-        color: #0F172A !important;
+        color: #FFFFFF !important;
         font-weight: 800 !important;
         letter-spacing: -0.3px !important;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8) !important;
     }
-    .main p, .main span:not(.plate-badge):not(.status-badge-vacant):not(.status-badge-reserved):not(.status-badge-occupied):not(.status-badge-blocked),
-    .main label, .main div[data-testid="stMarkdownContainer"] p {
-        color: #1E293B !important;
+    .main p,
+    .main span:not(.plate-badge):not(.status-badge-vacant):not(.status-badge-reserved):not(.status-badge-occupied):not(.status-badge-blocked),
+    .main div[data-testid="stMarkdownContainer"] p {
+        color: #F1F5F9 !important;
     }
     .main [data-testid="stCaptionContainer"] p {
-        color: #475569 !important;
+        color: #94A3B8 !important;
         font-weight: 600 !important;
     }
 
@@ -103,15 +105,15 @@ st.markdown("<style>\n" + _bg_css + """
     .main [data-testid="stWidgetLabel"] label,
     .main [data-testid="stWidgetLabel"] p,
     .main [data-testid="stWidgetLabel"] span {
-        color: #0F172A !important;
+        color: #38BDF8 !important;
         font-weight: 700 !important;
-        font-size: 0.92rem !important;
+        font-size: 0.94rem !important;
     }
 
     /* Radio button options in main body */
     .main div[role="radiogroup"] label,
     .main div[role="radiogroup"] label * {
-        color: #0F172A !important;
+        color: #FFFFFF !important;
         font-weight: 600 !important;
     }
 
@@ -166,11 +168,11 @@ st.markdown("<style>\n" + _bg_css + """
         color: #0F172A !important;
     }
 
-    /* PART B: High-Contrast Sidebar Navigation Styling */
+    /* PART B: High-Contrast Sidebar Navigation Themed Specifically for Aerial Parking Photo */
     [data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #0B1730 0%, #111C32 50%, #132747 100%) !important;
-        border-right: 1.5px solid rgba(34, 211, 238, 0.3) !important;
-        box-shadow: 4px 0 24px rgba(0, 0, 0, 0.4) !important;
+        background: linear-gradient(180deg, rgba(11, 18, 32, 0.90) 0%, rgba(15, 23, 42, 0.94) 100%), url("data:image/jpeg;base64,{_bg_b64}") center center / cover no-repeat !important;
+        border-right: 2px solid rgba(245, 158, 11, 0.45) !important;
+        box-shadow: 6px 0 28px rgba(0, 0, 0, 0.6) !important;
     }
     [data-testid="stSidebar"] [data-testid="stSidebarNav"] {
         display: none !important;
@@ -185,17 +187,17 @@ st.markdown("<style>\n" + _bg_css + """
         margin-top: 8px !important;
     }
 
-    /* Sidebar Radio Option Card */
+    /* Sidebar Radio Option Card with Asphalt Night Styling */
     [data-testid="stSidebar"] div[role="radiogroup"] > label {
-        background: #14233B !important;
-        border: 1.5px solid rgba(59, 130, 246, 0.35) !important;
+        background: rgba(17, 24, 39, 0.85) !important;
+        border: 1.5px solid rgba(255, 255, 255, 0.16) !important;
         border-left: 5px solid transparent !important;
         border-radius: 10px !important;
         padding: 12px 16px !important;
         margin: 0 !important;
         cursor: pointer !important;
         transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3) !important;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4) !important;
         position: relative !important;
     }
 
@@ -210,12 +212,12 @@ st.markdown("<style>\n" + _bg_css + """
         font-size: 0.96rem !important;
         font-weight: 700 !important;
         letter-spacing: 0.3px !important;
-        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6) !important;
+        text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8) !important;
     }
 
     [data-testid="stSidebar"] div[role="radiogroup"] > label:hover {
         transform: translateY(-2.5px) !important;
-        background: #1E3A8A !important;
+        background: rgba(30, 58, 138, 0.8) !important;
         border-color: #22D3EE !important;
         box-shadow: 0 6px 18px rgba(34, 211, 238, 0.35) !important;
     }
@@ -227,17 +229,17 @@ st.markdown("<style>\n" + _bg_css + """
         transform: scale(0.98) !important;
     }
 
-    /* Active / Checked sidebar item */
+    /* Active / Checked sidebar item - themed to the pic's yellow road divider and cyan lighting */
     [data-testid="stSidebar"] div[role="radiogroup"] > label:has(input:checked) {
-        background: linear-gradient(90deg, #1E40AF 0%, #172554 100%) !important;
+        background: linear-gradient(90deg, rgba(30, 58, 138, 0.92) 0%, rgba(15, 23, 42, 0.95) 100%) !important;
         border-color: #22D3EE !important;
-        border-left: 5.5px solid #22D3EE !important;
-        box-shadow: 0 6px 20px rgba(34, 211, 238, 0.4) !important;
+        border-left: 5.5px solid #F59E0B !important;
+        box-shadow: 0 6px 20px rgba(245, 158, 11, 0.35) !important;
     }
     [data-testid="stSidebar"] div[role="radiogroup"] > label:has(input:checked) * {
         color: #FFFFFF !important;
         font-weight: 800 !important;
-        text-shadow: 0 0 10px rgba(34, 211, 238, 0.6) !important;
+        text-shadow: 0 0 12px rgba(245, 158, 11, 0.6) !important;
     }
 
     [data-testid="stSidebar"] div[role="radiogroup"] > label div:first-child {
@@ -257,7 +259,7 @@ st.markdown("<style>\n" + _bg_css + """
     }
     [data-testid="stSidebar"] [data-testid="stCaptionContainer"] p,
     [data-testid="stSidebar"] small {
-        color: #94A3B8 !important;
+        color: #FBBF24 !important;
     }
 
     /* PART A: 2.5D Realistic Parking Bays */
@@ -467,25 +469,25 @@ def get_status_badge_html(status: str):
         return '<span style="background:rgba(16, 185, 129, 0.15); color:#10B981; border:1px solid #10B981; padding:3px 10px; border-radius:12px; font-size:0.75rem; font-weight:800;">✅ RESOLVED</span>'
     return f'<span style="background:#334155; color:#F8FAFC; padding:3px 10px; border-radius:12px; font-size:0.75rem; font-weight:700;">{status}</span>'
 
-# PART B: Sidebar Navigation & Brand Identity
+# PART B: Sidebar Navigation & Brand Identity (Themed to Aerial Facility Photo)
 st.sidebar.markdown("""
-<div style="padding: 10px 4px 18px 4px; border-bottom: 1px solid rgba(34, 211, 238, 0.22); margin-bottom: 14px;">
+<div style="padding: 10px 4px 18px 4px; border-bottom: 1.5px solid rgba(245, 158, 11, 0.4); margin-bottom: 14px;">
     <div style="display: flex; align-items: center; gap: 12px;">
-        <div style="width: 44px; height: 44px; min-width: 44px; border-radius: 12px; background: linear-gradient(135deg, #0284C7 0%, #22D3EE 100%); display: flex; align-items: center; justify-content: center; font-size: 1.6rem; box-shadow: 0 0 16px rgba(34, 211, 238, 0.55), inset 0 1px 1px rgba(255,255,255,0.4);">
+        <div style="width: 46px; height: 46px; min-width: 46px; border-radius: 12px; background: linear-gradient(135deg, #F59E0B 0%, #0284C7 100%); display: flex; align-items: center; justify-content: center; font-size: 1.7rem; box-shadow: 0 0 16px rgba(245, 158, 11, 0.5), inset 0 1px 1px rgba(255,255,255,0.4);">
             🅿️
         </div>
         <div>
             <div style="font-size: 1.35rem; font-weight: 900; letter-spacing: -0.5px; color: #FFFFFF; line-height: 1.2;">
                 SmartPark <span style="color: #22D3EE;">AI</span>
             </div>
-            <div style="font-size: 0.76rem; color: #94A3B8; font-weight: 600; letter-spacing: 0.2px; line-height: 1.2; margin-top: 2px;">
-                Intelligent Parking Management
+            <div style="font-size: 0.76rem; color: #FBBF24; font-weight: 700; letter-spacing: 0.2px; line-height: 1.2; margin-top: 2px;">
+                Aerial Facility Telemetry &bull; Smart City
             </div>
         </div>
     </div>
     <div style="display: flex; gap: 6px; margin-top: 12px;">
-        <span style="background: rgba(34, 211, 238, 0.15); color: #22D3EE; border: 1px solid rgba(34, 211, 238, 0.35); font-size: 0.68rem; font-weight: 800; padding: 2px 8px; border-radius: 10px;">v2.4 SMART CITY</span>
-        <span style="background: rgba(16, 185, 129, 0.15); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.35); font-size: 0.68rem; font-weight: 800; padding: 2px 8px; border-radius: 10px;">● ONLINE</span>
+        <span style="background: rgba(245, 158, 11, 0.18); color: #FBBF24; border: 1px solid rgba(245, 158, 11, 0.4); font-size: 0.68rem; font-weight: 800; padding: 2px 8px; border-radius: 10px;">AERIAL TELEMETRY</span>
+        <span style="background: rgba(16, 185, 129, 0.18); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.4); font-size: 0.68rem; font-weight: 800; padding: 2px 8px; border-radius: 10px;">● SENSORS ONLINE</span>
     </div>
 </div>
 """, unsafe_allow_html=True)
@@ -502,18 +504,18 @@ page = st.sidebar.radio(
 )
 
 st.sidebar.markdown("""
-<div style="margin-top: 24px; padding: 14px; background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(34, 211, 238, 0.22); border-radius: 12px; box-shadow: 0 4px 14px rgba(0,0,0,0.3);">
+<div style="margin-top: 24px; padding: 14px; background: rgba(15, 23, 42, 0.85); border: 1.5px solid rgba(245, 158, 11, 0.35); border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.5);">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-        <span style="font-size: 0.75rem; font-weight: 800; color: #94A3B8; letter-spacing: 0.5px;">SYSTEM STATUS</span>
+        <span style="font-size: 0.75rem; font-weight: 800; color: #FBBF24; letter-spacing: 0.5px;">SYSTEM STATUS</span>
         <span style="display: inline-flex; align-items: center; gap: 5px; background: rgba(16, 185, 129, 0.18); color: #10B981; border: 1px solid #10B981; font-size: 0.7rem; font-weight: 800; padding: 2px 8px; border-radius: 10px;">
             <span style="width: 7px; height: 7px; border-radius: 50%; background: #10B981; box-shadow: 0 0 6px #10B981;"></span> ONLINE
         </span>
     </div>
-    <div style="font-size: 0.8rem; color: #F8FAFC; font-weight: 700; margin-bottom: 3px;">
-        SQLite + YOLOv8 + EasyOCR
+    <div style="font-size: 0.8rem; color: #FFFFFF; font-weight: 700; margin-bottom: 3px;">
+        Aerial Telemetry + YOLOv8 + EasyOCR
     </div>
-    <div style="font-size: 0.72rem; color: #64748B;">
-        15 Stalls Active &bull; AI Interlock Ready
+    <div style="font-size: 0.72rem; color: #94A3B8;">
+        15 Stalls Active &bull; Roadway ANPR Online
     </div>
 </div>
 """, unsafe_allow_html=True)
