@@ -13,17 +13,23 @@ from services.parking_service import ParkingService
 from services.pricing_service import PricingService
 from services.billing_service import BillingService
 from services.alert_service import AlertService
-from anpr.camera import CameraUtils
-from anpr.recognition_pipeline import ANPRPipeline
-
 app = Flask(__name__)
 app.config.from_object(Config)
 
 # Initialize Database and seed defaults
 init_db(app)
 
-# Initialize ANPR Pipeline instance (lazily loads models on first request)
-anpr_pipeline = ANPRPipeline()
+# ANPR — optional (heavy ML, may not be available on cloud)
+try:
+    from anpr.camera import CameraUtils
+    from anpr.recognition_pipeline import ANPRPipeline
+    anpr_pipeline = ANPRPipeline()
+    ANPR_AVAILABLE = True
+except Exception:
+    CameraUtils = None
+    ANPRPipeline = None
+    anpr_pipeline = None
+    ANPR_AVAILABLE = False
 
 # --- Helper: Guard Authentication Decorator ---
 def guard_login_required(f):
@@ -93,6 +99,8 @@ def api_entry_recognize():
     if not frame_data:
         return jsonify({"success": False, "error": "No frame image provided."}), 400
 
+    if not ANPR_AVAILABLE or CameraUtils is None:
+        return jsonify({"success": False, "error": "ANPR not available on this deployment."}), 503
     frame_bgr = CameraUtils.decode_base64_frame(frame_data)
     if frame_bgr is None:
         return jsonify({"success": False, "error": "Failed to decode camera frame."}), 400
@@ -199,6 +207,8 @@ def api_exit_recognize():
     if not frame_data:
         return jsonify({"success": False, "error": "No frame image provided."}), 400
 
+    if not ANPR_AVAILABLE or CameraUtils is None:
+        return jsonify({"success": False, "error": "ANPR not available on this deployment."}), 503
     frame_bgr = CameraUtils.decode_base64_frame(frame_data)
     if frame_bgr is None:
         return jsonify({"success": False, "error": "Failed to decode camera frame."}), 400
