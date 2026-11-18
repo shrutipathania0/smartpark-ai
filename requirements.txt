@@ -19,9 +19,6 @@ requests>=2.31.0
 # Testing & Quality
 pytest>=8.0.0
 
-# --- Heavy ML packages (for local use only) ---
-# Uncomment these lines for local development with full ANPR:
-# torch>=2.2.0
-# torchvision>=0.17.0
-# ultralytics>=8.2.0
-# easyocr>=1.7.0
+# --- ML packages for ANPR (CPU-only, cloud-compatible) ---
+ultralytics>=8.2.0
+easyocr>=1.7.0
