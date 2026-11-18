@@ -61,9 +61,9 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Initialize Flask/SQLAlchemy database context
+# Initialize Flask/SQLAlchemy database context + seed default data
 with app.app_context():
-    pass
+    init_db(app)
 
 # Cache pipeline instance in session state (only if ANPR packages are installed)
 if "anpr_pipeline" not in st.session_state:
