@@ -17,8 +17,16 @@ from services.parking_service import ParkingService
 from services.pricing_service import PricingService
 from services.billing_service import BillingService
 from services.alert_service import AlertService
-from anpr.camera import CameraUtils
-from anpr.recognition_pipeline import ANPRPipeline
+
+# ANPR imports — optional (heavy ML packages may not be available on cloud)
+ANPR_AVAILABLE = False
+try:
+    from anpr.camera import CameraUtils
+    from anpr.recognition_pipeline import ANPRPipeline
+    ANPR_AVAILABLE = True
+except ImportError:
+    CameraUtils = None
+    ANPRPipeline = None
 
 # Streamlit Page Config
 st.set_page_config(
@@ -57,9 +65,12 @@ st.markdown("""
 with app.app_context():
     pass
 
-# Cache pipeline instance in session state
+# Cache pipeline instance in session state (only if ANPR packages are installed)
 if "anpr_pipeline" not in st.session_state:
-    st.session_state.anpr_pipeline = ANPRPipeline()
+    if ANPR_AVAILABLE:
+        st.session_state.anpr_pipeline = ANPRPipeline()
+    else:
+        st.session_state.anpr_pipeline = None
 
 # Helper function to get summary
 def get_summary():
@@ -173,26 +184,29 @@ elif nav_choice == "🚗 Driver Entry Machine (Interface 1)":
         # Process Image with ANPR
         if input_image is not None:
             st.image(input_image, caption="Captured Entry Frame", use_container_width=True)
-            bgr_frame = np.array(input_image)[:, :, ::-1]
             
-            with st.spinner("Running YOLO Plate Detection & OCR..."):
-                with app.app_context():
-                    anpr_res = st.session_state.anpr_pipeline.process_frame(bgr_frame, gate_type="entry")
-            
-            if anpr_res.get("success"):
-                reg = anpr_res.get("registration_number") or anpr_res.get("raw_text")
-                st.session_state["entry_reg"] = reg
-                conf_tier = anpr_res.get("confidence_tier", "MEDIUM")
-                combined_conf = anpr_res.get("combined_confidence", 0.0)
+            if st.session_state.anpr_pipeline is not None:
+                bgr_frame = np.array(input_image)[:, :, ::-1]
+                with st.spinner("Running YOLO Plate Detection & OCR..."):
+                    with app.app_context():
+                        anpr_res = st.session_state.anpr_pipeline.process_frame(bgr_frame, gate_type="entry")
                 
-                if anpr_res.get("cropped_plate_b64"):
-                    st.markdown("#### 🔍 Extracted Number Plate")
-                    st.image(anpr_res["cropped_plate_b64"], caption=f"Extracted Crop (Confidence: {combined_conf*100:.1f}%)", width=240)
-                
-                if conf_tier == "HIGH":
-                    st.success(f"✅ High-Confidence Plate Recognized: **{reg}** ({combined_conf*100:.1f}%)")
-                else:
-                    st.warning(f"⚠️ Plate Detected: **{reg}** ({conf_tier} - {combined_conf*100:.1f}%). Please confirm.")
+                if anpr_res.get("success"):
+                    reg = anpr_res.get("registration_number") or anpr_res.get("raw_text")
+                    st.session_state["entry_reg"] = reg
+                    conf_tier = anpr_res.get("confidence_tier", "MEDIUM")
+                    combined_conf = anpr_res.get("combined_confidence", 0.0)
+                    
+                    if anpr_res.get("cropped_plate_b64"):
+                        st.markdown("#### 🔍 Extracted Number Plate")
+                        st.image(anpr_res["cropped_plate_b64"], caption=f"Extracted Crop (Confidence: {combined_conf*100:.1f}%)", width=240)
+                    
+                    if conf_tier == "HIGH":
+                        st.success(f"✅ High-Confidence Plate Recognized: **{reg}** ({combined_conf*100:.1f}%)")
+                    else:
+                        st.warning(f"⚠️ Plate Detected: **{reg}** ({conf_tier} - {combined_conf*100:.1f}%). Please confirm.")
+            else:
+                st.info("📷 Image captured. ANPR engine not available on cloud — please type the registration number manually in the right panel.")
 
     with right_col:
         st.subheader("📋 Parking Slot Allocation")
@@ -532,15 +546,19 @@ elif nav_choice == "🚪 Driver Exit Machine (Interface 4)":
 
         if ex_image is not None:
             st.image(ex_image, caption="Captured Exit Frame", use_container_width=True)
-            bgr_ex = np.array(ex_image)[:, :, ::-1]
-            with st.spinner("Recognizing departing vehicle..."):
-                with app.app_context():
-                    ex_res = st.session_state.anpr_pipeline.process_frame(bgr_ex, gate_type="exit")
             
-            if ex_res.get("success"):
-                reg = ex_res.get("registration_number") or ex_res.get("raw_text")
-                st.session_state["exit_reg"] = reg
-                st.success(f"Plate scanned: **{reg}**")
+            if st.session_state.anpr_pipeline is not None:
+                bgr_ex = np.array(ex_image)[:, :, ::-1]
+                with st.spinner("Recognizing departing vehicle..."):
+                    with app.app_context():
+                        ex_res = st.session_state.anpr_pipeline.process_frame(bgr_ex, gate_type="exit")
+                
+                if ex_res.get("success"):
+                    reg = ex_res.get("registration_number") or ex_res.get("raw_text")
+                    st.session_state["exit_reg"] = reg
+                    st.success(f"Plate scanned: **{reg}**")
+            else:
+                st.info("📷 Image captured. ANPR engine not available on cloud — please type the registration number manually in the right panel.")
 
     with ex_right:
         st.subheader("🧾 Active Session & Itemized Bill")

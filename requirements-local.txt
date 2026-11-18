@@ -1,0 +1,11 @@
+# Full requirements for local development (includes ANPR/ML packages)
+# Install with: pip install -r requirements-local.txt
+
+-r requirements.txt
+
+# Heavy ML packages for ANPR pipeline (local only)
+torch>=2.2.0
+torchvision>=0.17.0
+ultralytics>=8.2.0
+easyocr>=1.7.0
+opencv-python>=4.8.0

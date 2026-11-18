@@ -5,20 +5,23 @@ python-dotenv>=1.0.0
 Werkzeug>=3.0.0
 streamlit>=1.35.0
 
-# Computer Vision & Deep Learning
-torch>=2.2.0
-torchvision>=0.17.0
-ultralytics>=8.2.0
-easyocr>=1.7.0
-opencv-python>=4.8.0
+# Image Processing (lightweight — always needed)
+opencv-python-headless>=4.8.0
+Pillow>=10.0.0
 
 # Data Science & Utilities
 numpy>=1.24.0
 pandas>=2.0.0
 matplotlib>=3.7.0
 scikit-learn>=1.3.0
-Pillow>=10.0.0
 requests>=2.31.0
 
 # Testing & Quality
 pytest>=8.0.0
+
+# --- Heavy ML packages (for local use only) ---
+# Uncomment these lines for local development with full ANPR:
+# torch>=2.2.0
+# torchvision>=0.17.0
+# ultralytics>=8.2.0
+# easyocr>=1.7.0
